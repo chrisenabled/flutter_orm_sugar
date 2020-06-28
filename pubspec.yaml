@@ -1,5 +1,5 @@
 name: flutter_bread
-description: A package which generates dart models and can create its Bread(Browse, read, edit, add, delete) files.
+description: A package that generates flutter MVVC with BREAD for an Object Model.
 version: 0.0.1
 maintainer: Mark O'Sullivan (@MarkOSullivan94)
 homepage: https://github.com/fluttercommunity/flutter_bread
