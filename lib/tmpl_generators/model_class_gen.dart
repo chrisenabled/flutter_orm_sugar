@@ -1,9 +1,7 @@
-
-import 'package:flutter_bread/models/model_field.dart';
-import 'package:flutter_bread/models/model_metadata.dart';
+import 'package:flutter_mvvm_generator/models/model_field.dart';
+import 'package:flutter_mvvm_generator/models/model_metadata.dart';
 
 class ModelClassGenerator {
-
   final ModelMetadata modelMetadata;
   final List<ModelField> requiredFields = [];
   final List<ModelField> optionalFields = [];
@@ -15,7 +13,7 @@ class ModelClassGenerator {
       modelFields.add(modelField);
       if (modelField.isRequired)
         requiredFields.add(modelField);
-      else 
+      else
         optionalFields.add(modelField);
     });
   }
@@ -25,7 +23,8 @@ class ModelClassGenerator {
   String generateModelFieldsDeclaration() {
     String fieldDeclarations = '';
     modelFields.forEach((modelField) {
-      fieldDeclarations  += 'final ${modelField.type} ${modelField.name}; \n  ';
+      if (modelField.name != 'id') fieldDeclarations += 'final ';
+      fieldDeclarations += '${modelField.type} ${modelField.name}; \n  ';
     });
     return fieldDeclarations;
   }
@@ -40,9 +39,9 @@ class ModelClassGenerator {
       if (optionalFields.length == 0) c = c.substring(0, c.length - 1);
     }
     if (optionalFields.length > 0) {
-      c += '\n    {';
+      c += requiredFields.length > 0 ? ' {' : '{';
       optionalFields.forEach((modelField) {
-          c += '\n      ';
+        c += '\n    ';
         if (!nullables.contains(modelField.defaultValue)) {
           c += 'this.${modelField.name} = ${modelField.defaultValue},';
         } else {
@@ -51,9 +50,9 @@ class ModelClassGenerator {
         }
       });
       c = c.substring(0, c.length - 1);
-      c += '\n    }';
+      c += '\n  }';
     }
-    c += '\n  )';
+    c += optionalFields.length > 0 ? ')' : '\n  )';
 
     if (optionalFieldsNoDefault.length > 0) {
       c += ':';
@@ -66,7 +65,6 @@ class ModelClassGenerator {
     c += ';';
 
     return c;
-
   }
 
   String generateCopyWith() {
@@ -81,7 +79,6 @@ class ModelClassGenerator {
     requiredFields.forEach((mf) {
       cw += '\n      ${mf.name} ?? this.${mf.name},';
     });
-    cw = cw.substring(0, cw.length - 1);
     optionalFields.forEach((mf) {
       cw += '\n      ${mf.name}: ${mf.name} ?? this.${mf.name},';
     });
@@ -95,7 +92,8 @@ class ModelClassGenerator {
     String hc = '@override \n  int get hashCode => \n     ';
     int fieldPerLine = 0;
     modelFields.forEach((mf) {
-      if (fieldPerLine > 5) { //maximum of 6 fields per line
+      if (fieldPerLine > 5) {
+        //maximum of 6 fields per line
         fieldPerLine = 0;
         hc += '\n     ';
       }
@@ -109,7 +107,8 @@ class ModelClassGenerator {
 
   String generateOperator() {
     String o = '@override \n  bool operator ==(Object other) =>';
-    o += '\n      identical(this, other) || \n      other is ${modelMetadata.modelName} &&';
+    o +=
+        '\n      identical(this, other) || \n      other is ${modelMetadata.modelName} &&';
     o += '\n          runtimeType == other.runtimeType &&';
     modelFields.forEach((mf) {
       o += '\n          ${mf.name} == other.${mf.name} &&';
@@ -117,21 +116,21 @@ class ModelClassGenerator {
     o = o.substring(0, o.length - 3);
     o += ';';
     return o;
-  } 
+  }
 
   String generateToString() {
     String ts = '@override \n  String toString() {';
-    ts += '\n    return \'${modelMetadata.modelName} {';
+    ts += '\n    return \'\'\'${modelMetadata.modelName} {';
     modelFields.forEach((mf) {
       ts += '\n      ${mf.name}: \$${mf.name},';
     });
     ts = ts.substring(0, ts.length - 1);
-    ts += '\n    }\'; \n  }';
+    ts += '\n    }\'\'\'; \n  }';
     return ts;
   }
 
   String generateToEntity() {
-    String te = '${modelMetadata.modelName}Entity() toEntity{';
+    String te = '${modelMetadata.modelName}Entity toEntity() {';
     te += '\n    return ${modelMetadata.modelName}Entity(';
     modelFields.forEach((mf) {
       te += '\n        ${mf.name},';
@@ -142,8 +141,8 @@ class ModelClassGenerator {
   }
 
   String generateFromEntity() {
-    String fe = 
-     'static ${modelMetadata.modelName} fromEntity(${modelMetadata.modelName}Entity entity) {';
+    String fe =
+        'static ${modelMetadata.modelName} fromEntity(${modelMetadata.modelName}Entity entity) {';
     fe += '\n    return ${modelMetadata.modelName}(';
     requiredFields.forEach((rf) {
       fe += '\n        entity.${rf.name},';
@@ -164,6 +163,8 @@ class ModelClassGenerator {
     return '''
 // Auto generated model class
 
+${modelMetadata.repo != null ? 'import \'' + modelMetadata.modelName + 'Entity.dart\';' : ''}
+
 class ${modelMetadata.modelName} {
 
   ${generateModelFieldsDeclaration()}
@@ -178,14 +179,12 @@ class ${modelMetadata.modelName} {
 
   ${generateToString()}
 
-  ${modelMetadata.hasEntity?generateToEntity():''}
+  ${modelMetadata.repo != null ? generateToEntity() : ''}
 
-  ${modelMetadata.hasEntity?generateFromEntity():''}
+  ${modelMetadata.repo != null ? generateFromEntity() : ''}
 
 }  
     
     ''';
   }
-
-
 }

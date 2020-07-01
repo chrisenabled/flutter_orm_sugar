@@ -124,6 +124,7 @@ String get(String message,
 
       if (color) {
         var toWrite = line;
+        if (toWrite == '' &&  ![null, ''].contains(defaultsTo)) toWrite = defaultsTo;
         if (conceal) {
           var asterisks = List.filled(line.length, $asterisk);
           toWrite = String.fromCharCodes(asterisks);

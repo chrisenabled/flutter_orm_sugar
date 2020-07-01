@@ -1,13 +1,12 @@
 import 'dart:io';
 
-import 'package:flutter_bread/generator.dart';
-import 'package:flutter_bread/models/model_field.dart';
-import 'package:flutter_bread/models/model_metadata.dart';
-import 'package:flutter_bread/prompts.dart' as prompts;
+import 'package:flutter_mvvm_generator/generator.dart';
+import 'package:flutter_mvvm_generator/models/model_field.dart';
+import 'package:flutter_mvvm_generator/models/model_metadata.dart';
+import 'package:flutter_mvvm_generator/prompts.dart' as prompts;
 import 'package:args/command_runner.dart';
 
 class CreateModelCommand extends Command {
-   
   final name = 'model';
   final description = 'Generates a Model Class';
 
@@ -20,15 +19,16 @@ class CreateModelCommand extends Command {
   }
 
   String getNameDetails() {
-    String name = prompts.get("Enter model's name (e.g Todo): ", validate: (s) => rightFormat(s));
-    name = '${name[0].toUpperCase()}${name.substring(1)}'; 
+    String name = prompts.get("Enter model's name (e.g Todo): ",
+        validate: (s) => rightFormat(s));
+    name = '${name[0].toUpperCase()}${name.substring(1)}';
     return name;
   }
 
   void getFieldsDetails() {
     final addField = prompts.getBool('Add new Field', defaultsTo: true);
-    if(addField) {
-      final field = getFieldFromUserInput();
+    if (addField) {
+      final ModelField field = getFieldFromUserInput();
       if (field != null) {
         modelFields.add(field);
       }
@@ -48,55 +48,83 @@ class CreateModelCommand extends Command {
       if (run) {
         dynamic input;
         if (value['options'] != null) {
-          input = prompts.choose(value['prompt'], value['options'], defaultsTo: value['options'][0]);
+          input = prompts.choose(value['prompt'], value['options'],
+              defaultsTo: value['options'][0]);
         } else {
           if (value['isBool'] != null)
             input = prompts.getBool(value['prompt'], defaultsTo: true);
           else {
             bool isOptional = false;
             if (value['isOptional'] != null) isOptional = true;
-            
+
             if (key == 'defaultValue') {
-              switch(fieldJson['type']) {
-                case 'int' : input = prompts.getInt(value['prompt'], isOptional: isOptional); break;
-                case 'double' : input = prompts.getDouble(value['prompt'], isOptional: isOptional); break;
-                case 'bool' : {
-                  input = prompts.get(value['prompt'], 
-                  validate: (s) => s.startsWith('t')||s.startsWith('f'), defaultsTo: 'f');
-                  input = input.toString().startsWith('f')? 'false' : 'true';
-                } break;
-                default: input = prompts.get(value['prompt'], isOptional: isOptional); break;
+              switch (fieldJson['type']) {
+                case 'int':
+                  input =
+                      prompts.getInt(value['prompt'], isOptional: isOptional);
+                  break;
+                case 'double':
+                  input = prompts.getDouble(value['prompt'],
+                      isOptional: isOptional);
+                  break;
+                case 'bool':
+                  {
+                    input = prompts.get(value['prompt'],
+                        validate: (s) => s.startsWith('t') || s.startsWith('f'),
+                        defaultsTo: 'f');
+                    input = input.toString().startsWith('f') ? 'false' : 'true';
+                  }
+                  break;
+                default:
+                  input = prompts.get(value['prompt'], isOptional: isOptional);
+                  break;
               }
             } else {
-              input = prompts.get(value['prompt'], isOptional: isOptional);
-            } 
-            if (key == 'name') input = '${input.toString()[0].toLowerCase()}${input.toString().substring(1)}';
+              if (key == 'name') {
+                input = prompts.get(value['prompt'],
+                    isOptional: isOptional,
+                    validate: (i) => i != 'id' && i != '_id');
+                input =
+                    '${input.toString()[0].toLowerCase()}${input.toString().substring(1)}';
+              } else {
+                input = prompts.get(value['prompt'], isOptional: isOptional);
+              }
+            }
           }
         }
         fieldJson[key] = input ?? '';
       }
-
     });
     return ModelField.fromJson(fieldJson);
   }
 
   ModelMetadata getModelMetaData() {
     String modelName = getNameDetails();
-    bool hasEntity = false;
+    String repo;
+    modelFields.add(ModelField('id', 'String', false,
+        '')); // add an id field for use with persistent engines
     getFieldsDetails();
-    final addEntity = prompts.getBool("Add Entity Class?");
-    bool hasFirebaseSupport = false;
-    if (addEntity) {
-      hasEntity = true;
-      hasFirebaseSupport = prompts.getBool("Add Firebase support");
+    final addRepo = prompts.getBool("Add Repository?");
+    if (addRepo) {
+      repo = prompts.choose('Select repository', ['SQL', 'Firebase'],
+          defaultsTo: 'SQL');
+      if (repo == 'SQL')
+        repo = 'sqflite';
+      else
+        repo = 'cloud_firestore';
     }
-     return ModelMetadata(modelName, modelFields, hasEntity, hasFirebaseSupport);
+    return ModelMetadata(modelName, modelFields, repo, hasRepoDep(repo + ':'));
   }
+
   void run() {
     final ModelMetadata mm = getModelMetaData();
     generateModelClass(mm);
-    if(mm.hasEntity) {
+    if (mm.repo != null) {
       generateEntityClass(mm);
+      if (mm.repo == 'sqflite')
+        generateSqlRepositoryClass(mm);
+      else
+        generateFirebaseRepositoryClass(mm);
     }
   }
 }
