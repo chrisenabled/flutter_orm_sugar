@@ -1,7 +1,7 @@
 
 
-import 'package:flutter_mvvm_generator/models/model_field.dart';
-import 'package:flutter_mvvm_generator/models/model_metadata.dart';
+import 'package:flutter_orm_sugar/models/model_field.dart';
+import 'package:flutter_orm_sugar/models/model_metadata.dart';
 
 class EntityClassGenerator {
 
@@ -76,7 +76,7 @@ class EntityClassGenerator {
 
   String generateFromSnapshot(bool hasFirestoreDep) {
     String commented () => hasFirestoreDep? '':'//' ;
-    String rj = hasFirestoreDep?'':'///Install cloud_firestore package and uncomment this method to support firestore \n';
+    String rj = hasFirestoreDep?'':'///Install ${this.modelMetadata.repository} package and uncomment this method to support firestore \n';
     rj += '${commented()}  static $entityName fromSnapshot(DocumentSnapshot snap) { \n${commented()}    return $entityName (';
     modelFields.forEach((mf) {
       rj += '\n${commented()}        ';
@@ -89,12 +89,10 @@ class EntityClassGenerator {
   }
 
   String addRepoImport(bool hasRepoDep) {
-    String repo = modelMetadata.repo;
+    String repo = modelMetadata.repository;
     String importStmt = '';
-    if (repo == 'sqflite') {
-      if (!hasRepoDep) importStmt += '///Install $repo pacakge and uncomment this import \n// ';
-      importStmt += 'import \'package:$repo/$repo.dart\';';
-    }
+    if (!hasRepoDep) importStmt += '///Install $repo pacakge and uncomment this import \n// ';
+    importStmt += 'import \'package:$repo/$repo.dart\';';
     
     return importStmt;
   }
@@ -112,11 +110,11 @@ class $entityName {
 
   ${generateConstructor()}
 
-  ${generateToJson()}  ${modelMetadata.repo == 'cloud_firestore' ? '\n\n  ' + generateToDocument():''}
+  ${generateToJson()}  ${modelMetadata.repository == 'cloud_firestore' ? '\n\n  ' + generateToDocument():''}
 
   ${generateToString()}
 
-  ${generateFromJson()} ${modelMetadata.repo == 'cloud_firestore' ? '\n\n' + generateFromSnapshot(hasRepoDep):''}
+  ${generateFromJson()} ${modelMetadata.repository == 'cloud_firestore' ? '\n\n' + generateFromSnapshot(hasRepoDep):''}
 
 }
 

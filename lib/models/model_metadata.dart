@@ -1,10 +1,12 @@
-import 'package:flutter_mvvm_generator/models/model_field.dart';
+import 'package:flutter_orm_sugar/models/model_field.dart';
 
 class ModelMetadata {
   final String modelName;
   final List<ModelField> modelFields;
-  final String repo;
-  final bool hasRepoDep;
+  final String repository;
+  final String repoName; //table_name or collection path
+  final Map<String, String> relationships;
 
-  ModelMetadata(this.modelName, this.modelFields, this.repo, this.hasRepoDep);
+  const ModelMetadata(
+      this.modelName, this.modelFields, this.repoName, this.repository, this.relationships);
 }

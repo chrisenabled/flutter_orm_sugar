@@ -1,4 +1,4 @@
-import 'package:flutter_mvvm_generator/models/model_metadata.dart';
+import 'package:flutter_orm_sugar/models/model_metadata.dart';
 
 class SqlRepositoryGenerator {
   final ModelMetadata modelMetadata;
@@ -7,17 +7,6 @@ class SqlRepositoryGenerator {
 
   SqlRepositoryGenerator(this.modelMetadata)
       : modelName = modelMetadata.modelName;
-
-  String addSqfliteImport() {
-    String importStmt = '';
-
-    if (!modelMetadata.hasRepoDep)
-      importStmt +=
-          '///Install sqflite pacakge and uncomment import below \n\n// ';
-
-    importStmt += 'import \'package:sqflite/sqflite.dart\';';
-    return importStmt;
-  }
 
   String getSqlFieldType(String fieldName) {
     switch (fieldName) {
@@ -54,7 +43,7 @@ class SqlRepositoryGenerator {
     return '''
 import 'dart:async';
 
-${addSqfliteImport()}
+import \'package:sqflite/sqflite.dart\';
 
 import '${modelName}Entity.dart';
 
