@@ -1,9 +1,7 @@
-import 'dart:io';
-
-import 'package:flutter_mvvm_generator/generator.dart';
-import 'package:flutter_mvvm_generator/models/model_field.dart';
-import 'package:flutter_mvvm_generator/models/model_metadata.dart';
-import 'package:flutter_mvvm_generator/prompts.dart' as prompts;
+import 'package:flutter_orm_sugar/generator.dart';
+import 'package:flutter_orm_sugar/models/model_field.dart';
+import 'package:flutter_orm_sugar/models/model_metadata.dart';
+import 'package:flutter_orm_sugar/prompts.dart' as prompts;
 import 'package:args/command_runner.dart';
 
 class CreateModelCommand extends Command {
@@ -33,6 +31,13 @@ class CreateModelCommand extends Command {
         modelFields.add(field);
       }
       getFieldsDetails();
+    }
+  }
+
+  void getRelationships() {
+    final addRelationship = prompts.getBool('Add a Relationship', defaultsTo: false);
+    if (addRelationship) {
+      
     }
   }
 
@@ -100,31 +105,29 @@ class CreateModelCommand extends Command {
 
   ModelMetadata getModelMetaData() {
     String modelName = getNameDetails();
-    String repo;
-    modelFields.add(ModelField('id', 'String', false,
-        '')); // add an id field for use with persistent engines
+    String repository;
     getFieldsDetails();
-    final addRepo = prompts.getBool("Add Repository?");
-    if (addRepo) {
-      repo = prompts.choose('Select repository', ['SQL', 'Firebase'],
-          defaultsTo: 'SQL');
-      if (repo == 'SQL')
-        repo = 'sqflite';
-      else
-        repo = 'cloud_firestore';
+    repository = prompts.choose('Select repository', ['Sqlite', 'Firestore'],
+          defaultsTo: 'Sqlite');
+      String repoName;
+      if (repository == 'Sqlite') {
+        repoName = prompts.get('Enter table name e.g(todo)');
+      } else {
+        repoName = prompts.get('Enter collection path e.g(path/to/collection)');
     }
-    return ModelMetadata(modelName, modelFields, repo, hasRepoDep(repo + ':'));
+    return ModelMetadata(modelName, modelFields, repoName,repository, null);
   }
 
   void run() {
     final ModelMetadata mm = getModelMetaData();
+    generateOrmAbstractClasses(mm);
     generateModelClass(mm);
-    if (mm.repo != null) {
-      generateEntityClass(mm);
-      if (mm.repo == 'sqflite')
-        generateSqlRepositoryClass(mm);
-      else
-        generateFirebaseRepositoryClass(mm);
-    }
+    // if (mm.repoEngine != null) {
+    //   generateEntityClass(mm);
+    //   if (mm.repoEngine == 'sqflite')
+    //     generateSqlRepositoryClass(mm);
+    //   else
+    //     generateFirebaseRepositoryClass(mm);
+    // }
   }
 }

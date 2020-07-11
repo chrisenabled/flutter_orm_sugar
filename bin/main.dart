@@ -1,5 +1,6 @@
-import 'package:flutter_mvvm_generator/flutter_bread.dart' as flutter_bread;
+import 'package:flutter_orm_sugar/flutter_orm_sugar.dart' as flutter_orm_sugar;
 
-void main(List<String> args) {
-  flutter_bread.createBreadFromArgs(args);
+Future<void> main(List<String> args) async {
+  flutter_orm_sugar.createBreadFromArgs(args);
 }
+

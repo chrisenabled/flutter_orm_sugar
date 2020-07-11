@@ -1,8 +1,8 @@
-name: flutter_mvvm_generator
+name: flutter_orm_sugar
 description: A package that generates Model View ViewModel for an Object Model.
 version: 0.0.1
 maintainer: Christopher Ahmed (@chrisenabled)
-homepage: https://github.com/fluttercommunity/flutter_mvvm_generator
+homepage: https://github.com/fluttercommunity/flutter_orm_sugar
 authors:
   - Flutter Community <community@flutter.zone>
   - Christopher Ahmed
@@ -16,6 +16,8 @@ dependencies:
   args: "^1.6.0"
   charcode: ^1.0.0
   io: ^0.3.2
+  cloud_firestore: 0.13.7
+  firebase_core: 0.4.5
 
 dev_dependencies:
   flutter_test:

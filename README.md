@@ -1,4 +1,4 @@
-# flutter_bread
+# flutter_orm_sugar
 
 A new Flutter package project.
 
