@@ -1,7 +1,7 @@
 
 
-import 'package:flutter_bread/models/model_field.dart';
-import 'package:flutter_bread/models/model_metadata.dart';
+import 'package:flutter_orm_sugar/models/model_field.dart';
+import 'package:flutter_orm_sugar/models/model_metadata.dart';
 
 class EntityClassGenerator {
 
@@ -25,7 +25,7 @@ class EntityClassGenerator {
   String generateConstructor() {
     String c = 'const ${this.entityName}(';
     modelFields.forEach((mf) {
-      c += '\n        this.${mf.name},';
+      c += '\n      this.${mf.name},';
     });
     c = c.substring(0, c.length - 1);
     c += '\n  );';
@@ -54,12 +54,12 @@ class EntityClassGenerator {
   }
 
   String generateToString() {
-    String ts = '@override \n  String toString() { \n    return \'${this.entityName} {';
+    String ts = '@override \n  String toString() { \n    return \'\'\'${this.entityName} {';
     modelFields.forEach((mf) {
       ts += '\n        ${mf.name}: \$${mf.name},';
     });
     ts = ts.substring(0, ts.length - 1);
-    ts += '\n    }\';';
+    ts += '\n    }\'\'\'; \n  }';
     return ts;
   }
 
@@ -74,29 +74,35 @@ class EntityClassGenerator {
     return rj;
   }
 
-  String generateFromSnapshot() {
-    String rj = 'static $entityName fromSnapshot(DocumentSnapshot snap) { \n    return $entityName (';
+  String generateFromSnapshot(bool hasFirestoreDep) {
+    String commented () => hasFirestoreDep? '':'//' ;
+    String rj = hasFirestoreDep?'':'///Install ${this.modelMetadata.repository} package and uncomment this method to support firestore \n';
+    rj += '${commented()}  static $entityName fromSnapshot(DocumentSnapshot snap) { \n${commented()}    return $entityName (';
     modelFields.forEach((mf) {
-      rj += '\n        ';
+      rj += '\n${commented()}        ';
       if (mf.name == 'id') rj += 'snap.documentID,';
       else rj += 'snap.data["${mf.name}"],';
     });
     rj = rj.substring(0, rj.length - 1);
-    rj += '\n    ); \n  }';
+    rj += '\n${commented()}    ); \n${commented()}  }';
     return rj;
   }
 
-  String addFirebaseImport() {
-    return modelMetadata.hasFirebaseSupport?
-     'import \'package:cloud_firestore/cloud_firestore.dart\';' : '';
+  String addRepoImport(bool hasRepoDep) {
+    String repo = modelMetadata.repository;
+    String importStmt = '';
+    if (!hasRepoDep) importStmt += '///Install $repo pacakge and uncomment this import \n// ';
+    importStmt += 'import \'package:$repo/$repo.dart\';';
+    
+    return importStmt;
   }
 
 
-  String generateClass() {
+  String generateClass({bool hasRepoDep = false}) {
     return '''
 // Auto generated Entity class
 
-${addFirebaseImport()}
+${addRepoImport(hasRepoDep)}
 
 class $entityName {
 
@@ -104,11 +110,11 @@ class $entityName {
 
   ${generateConstructor()}
 
-  ${generateToJson()}  ${this.modelMetadata.hasFirebaseSupport ? '\n\n  ' + generateToDocument():''}
+  ${generateToJson()}  ${modelMetadata.repository == 'cloud_firestore' ? '\n\n  ' + generateToDocument():''}
 
   ${generateToString()}
 
-  ${generateFromJson()} ${this.modelMetadata.hasFirebaseSupport ? '\n\n  ' + generateFromSnapshot():''}
+  ${generateFromJson()} ${modelMetadata.repository == 'cloud_firestore' ? '\n\n' + generateFromSnapshot(hasRepoDep):''}
 
 }
 

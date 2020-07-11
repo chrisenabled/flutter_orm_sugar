@@ -1,14 +1,12 @@
-
-
-import 'package:flutter_bread/models/model_field.dart';
+import 'package:flutter_orm_sugar/models/model_field.dart';
 
 class ModelMetadata {
-
   final String modelName;
   final List<ModelField> modelFields;
-  final bool hasEntity;
-  final bool hasFirebaseSupport;
+  final String repository;
+  final String repoName; //table_name or collection path
+  final Map<String, String> relationships;
 
-  ModelMetadata(this.modelName, this.modelFields, this.hasEntity, this.hasFirebaseSupport);
-
+  const ModelMetadata(
+      this.modelName, this.modelFields, this.repoName, this.repository, this.relationships);
 }

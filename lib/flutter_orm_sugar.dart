@@ -1,4 +1,4 @@
-library flutter_bread;
+library flutter_orm_sugar;
 
 import 'dart:io';
 
