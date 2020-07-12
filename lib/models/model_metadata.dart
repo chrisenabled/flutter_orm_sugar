@@ -5,7 +5,7 @@ class ModelMetadata {
   final List<ModelField> modelFields;
   final String repository;
   final String repoName; //table_name or collection path
-  final Map<String, String> relationships;
+  final List<Map<String, String>> relationships;
 
   const ModelMetadata(
       this.modelName, this.modelFields, this.repoName, this.repository, this.relationships);
