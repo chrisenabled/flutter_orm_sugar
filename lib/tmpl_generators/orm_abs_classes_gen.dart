@@ -4,9 +4,9 @@ class OrmAbsClassesGenerator {
 
 abstract class PersistentModel {
   String repo;
-  var id;
-  DateTime createdAt;
-  DateTime updatedAt;
+  var id; /// Automatically generated first time object is saved.
+  DateTime createdAt; /// Automatically generated first time object is saved.
+  DateTime updatedAt; /// Automatically updated anytime object is saved.
   List<String> ordering;
   List<Map<Map<String, String>, String>> conditions;
   int lim;

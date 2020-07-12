@@ -124,7 +124,8 @@ String get(String message,
 
       if (color) {
         var toWrite = line;
-        if (toWrite == '' &&  ![null, ''].contains(defaultsTo)) toWrite = defaultsTo;
+        if (toWrite == '' && ![null, ''].contains(defaultsTo))
+          toWrite = defaultsTo;
         if (conceal) {
           var asterisks = List.filled(line.length, $asterisk);
           toWrite = String.fromCharCodes(asterisks);
@@ -278,6 +279,7 @@ T choose<T>(String message, Iterable<T> options,
     bool color = true,
     bool conceal = false,
     bool interactive = true,
+    bool Function(String) validate,
     Iterable<String> names}) {
   if (options.isEmpty) {
     throw ArgumentError.value('`options` may not be empty.');
@@ -420,6 +422,7 @@ T choose<T>(String message, Iterable<T> options,
       color: color,
       conceal: conceal,
       validate: (s) {
+        if (!validate(s)) return false;
         if (s.isEmpty) return defaultsTo != null;
         if (map.values.contains(s)) return true;
         if (names != null && names.contains(s)) return true;

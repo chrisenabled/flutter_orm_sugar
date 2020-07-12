@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter_orm_sugar/constants.dart';
 import 'package:flutter_orm_sugar/models/model_metadata.dart';
 import 'package:flutter_orm_sugar/tmpl_generators/entity_class_gen.dart';
 import 'package:flutter_orm_sugar/tmpl_generators/orm_model_gen.dart';
@@ -20,24 +21,25 @@ bool hasRepoDep(String repoDep) {
 
 void generateModelClass(ModelMetadata modelMetadata) {
   String modelString = OrmModelGenerator(modelMetadata).generateClass();
+  String modelFileName = toSnakeCase(modelMetadata.modelName);
   String path =
-      '$ormFolder${modelMetadata.modelName}/${modelMetadata.modelName}.dart';
+      '$ormModelFolder$modelFileName/$modelFileName.dart';
   if (File(path).existsSync()) {
-    Directory('$ormFolder${modelMetadata.modelName}')
+    Directory('$ormModelFolder$modelFileName')
         .deleteSync(recursive: true);
   }
   createFile(path, modelString);
-  updateIndexFile(modelMetadata, '${modelMetadata.modelName}.dart');
+  // updateIndexFile(modelMetadata, '${modelMetadata.modelName}.dart');
 }
 
-void generateEntityClass(ModelMetadata modelMetadata) {
-  String entityString = EntityClassGenerator(modelMetadata)
-      .generateClass(hasRepoDep: hasRepoDep(modelMetadata.repository));
-  String path =
-      '$ormFolder${modelMetadata.modelName}/${modelMetadata.modelName}Entity.dart';
-  createFile(path, entityString);
-  updateIndexFile(modelMetadata, '${modelMetadata.modelName}Entity.dart');
-}
+// void generateEntityClass(ModelMetadata modelMetadata) {
+//   String entityString = EntityClassGenerator(modelMetadata)
+//       .generateClass(hasRepoDep: hasRepoDep(modelMetadata.repository));
+//   String path =
+//       '$ormFolder${modelMetadata.modelName}/${modelMetadata.modelName}Entity.dart';
+//   createFile(path, entityString);
+//   updateIndexFile(modelMetadata, '${modelMetadata.modelName}Entity.dart');
+// }
 
 void generateSqlRepositoryClass(ModelMetadata modelMetadata) {
   String modelString = SqlRepositoryGenerator(modelMetadata).generateClass();
@@ -47,8 +49,8 @@ void generateSqlRepositoryClass(ModelMetadata modelMetadata) {
   String path =
       '$ormFolder${modelMetadata.modelName}/Sql${modelMetadata.modelName + s}Repository.dart';
   createFile(path, modelString);
-  updateIndexFile(
-      modelMetadata, 'Sql${modelMetadata.modelName + s}Repository.dart');
+  // updateIndexFile(
+  //     modelMetadata, 'Sql${modelMetadata.modelName + s}Repository.dart');
 }
 
 void generateOrmAbstractClasses(ModelMetadata modelMetadata) {
@@ -57,12 +59,16 @@ void generateOrmAbstractClasses(ModelMetadata modelMetadata) {
           {createFile(path, data)}
         });
   }
+
   String path = '$ormAbsFolder';
   final ormgen = OrmAbsClassesGenerator();
-  performCreation(path + 'persistent_model.dart', ormgen.generateAbsPersistentModelClass());
+  performCreation(
+      path + 'persistent_model.dart', ormgen.generateAbsPersistentModelClass());
   if (modelMetadata.repository != 'sqflite') {
-    performCreation(path + 'firestore_model.dart', ormgen.generateAbsFirestoreModelClass());
-    performCreation(ormRepoFolder + 'firestore_repository.dart', ormgen.generateFirestoreRepositoryClass());
+    performCreation(
+        path + 'firestore_model.dart', ormgen.generateAbsFirestoreModelClass());
+    performCreation(ormRepoFolder + 'firestore_repository.dart',
+        ormgen.generateFirestoreRepositoryClass());
   }
 }
 

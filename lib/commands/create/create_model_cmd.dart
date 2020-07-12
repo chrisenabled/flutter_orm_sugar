@@ -1,14 +1,22 @@
+import 'dart:io';
+
 import 'package:flutter_orm_sugar/generator.dart';
 import 'package:flutter_orm_sugar/models/model_field.dart';
 import 'package:flutter_orm_sugar/models/model_metadata.dart';
 import 'package:flutter_orm_sugar/prompts.dart' as prompts;
 import 'package:args/command_runner.dart';
 
+import '../../constants.dart';
+
 class CreateModelCommand extends Command {
   final name = 'model';
   final description = 'Generates a Model Class';
 
   final List<ModelField> modelFields = [];
+  final List<Map<String, String>> rels = [];
+  String modelName;
+  String repoName;
+  String repository;
   final Map modelMetadata = {};
 
   bool rightFormat(name) {
@@ -34,10 +42,33 @@ class CreateModelCommand extends Command {
     }
   }
 
-  void getRelationships() {
-    final addRelationship = prompts.getBool('Add a Relationship', defaultsTo: false);
-    if (addRelationship) {
-      
+  void getRelationships([List<String> fs]) {
+    if (!Directory(ormModelFolder).existsSync()) return;
+    fs ??= Directory(ormModelFolder)
+        .listSync()
+        .map((e) => e.path.split('/').last)
+        .where((element) => element != modelName.toLowerCase())
+        .toList();
+    if (fs == null || fs.length == 0) return;
+    final addRel = prompts.getBool('Add a Relationship', defaultsTo: false);
+    if (addRel) {
+      List<String> relTypes = ['HasOne', 'HasMany', 'BelongsTo'];
+      final chooseRel = prompts.choose('Select relationship type', relTypes,
+          defaultsTo: relTypes[0]);
+      final chooseModel = prompts.choose(
+        'Select Model',
+        fs,
+        defaultsTo: fs[0],
+        validate: (s) => s.toLowerCase() != modelName.toLowerCase(),
+      );
+      rels.add({chooseRel: chooseModel});
+      if (chooseRel == relTypes[2]) {
+        String name = '${chooseModel}Id';
+        String type = repository == 'Firestore' ? 'String' : 'int';
+        modelFields.add(ModelField(name, type, true, null));
+      }
+      getRelationships(
+          fs.where((element) => !fs.contains(chooseModel)).toList());
     }
   }
 
@@ -104,18 +135,17 @@ class CreateModelCommand extends Command {
   }
 
   ModelMetadata getModelMetaData() {
-    String modelName = getNameDetails();
-    String repository;
+    modelName = getNameDetails();
     getFieldsDetails();
     repository = prompts.choose('Select repository', ['Sqlite', 'Firestore'],
-          defaultsTo: 'Sqlite');
-      String repoName;
-      if (repository == 'Sqlite') {
-        repoName = prompts.get('Enter table name e.g(todo)');
-      } else {
-        repoName = prompts.get('Enter collection path e.g(path/to/collection)');
+        defaultsTo: 'Sqlite');
+    if (repository == 'Sqlite') {
+      repoName = prompts.get('Enter table name e.g(todo)');
+    } else {
+      repoName = prompts.get('Enter collection path e.g(path/to/collection)');
     }
-    return ModelMetadata(modelName, modelFields, repoName,repository, null);
+    getRelationships();
+    return ModelMetadata(modelName, modelFields, repoName, repository, rels);
   }
 
   void run() {
