@@ -1,5 +1,5 @@
 const String ormFolder = '../lib/orm_module/';
-const String ormAbsFolder = ormFolder + 'orm_abstract/';
+const String ormClassesFolder = ormFolder + 'orm_classes/';
 const String ormRepoFolder = ormFolder + 'orm_repositories/';
 const String ormModelFolder = ormFolder + 'orm_models/';
 const String pubspecFile = '../pubspec.yaml';

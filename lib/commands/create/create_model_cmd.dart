@@ -150,7 +150,7 @@ class CreateModelCommand extends Command {
 
   void run() {
     final ModelMetadata mm = getModelMetaData();
-    generateOrmAbstractClasses(mm);
+    generateOrmClasses(mm);
     generateModelClass(mm);
     // if (mm.repoEngine != null) {
     //   generateEntityClass(mm);
