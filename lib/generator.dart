@@ -2,9 +2,8 @@ import 'dart:io';
 
 import 'package:flutter_orm_sugar/constants.dart';
 import 'package:flutter_orm_sugar/models/model_metadata.dart';
-import 'package:flutter_orm_sugar/tmpl_generators/entity_class_gen.dart';
 import 'package:flutter_orm_sugar/tmpl_generators/orm_model_gen.dart';
-import 'package:flutter_orm_sugar/tmpl_generators/orm_abs_classes_gen.dart';
+import 'package:flutter_orm_sugar/tmpl_generators/orm_classes.dart';
 import 'package:flutter_orm_sugar/tmpl_generators/sql_repo_gen.dart';
 
 import 'constants.dart';
@@ -32,15 +31,6 @@ void generateModelClass(ModelMetadata modelMetadata) {
   // updateIndexFile(modelMetadata, '${modelMetadata.modelName}.dart');
 }
 
-// void generateEntityClass(ModelMetadata modelMetadata) {
-//   String entityString = EntityClassGenerator(modelMetadata)
-//       .generateClass(hasRepoDep: hasRepoDep(modelMetadata.repository));
-//   String path =
-//       '$ormFolder${modelMetadata.modelName}/${modelMetadata.modelName}Entity.dart';
-//   createFile(path, entityString);
-//   updateIndexFile(modelMetadata, '${modelMetadata.modelName}Entity.dart');
-// }
-
 void generateSqlRepositoryClass(ModelMetadata modelMetadata) {
   String modelString = SqlRepositoryGenerator(modelMetadata).generateClass();
   String s = modelMetadata.modelName[modelMetadata.modelName.length - 1] != 's'
@@ -53,20 +43,18 @@ void generateSqlRepositoryClass(ModelMetadata modelMetadata) {
   //     modelMetadata, 'Sql${modelMetadata.modelName + s}Repository.dart');
 }
 
-void generateOrmAbstractClasses(ModelMetadata modelMetadata) {
+void generateOrmClasses(ModelMetadata modelMetadata) {
   void performCreation(path, data) {
     File(path).exists().then((value) => {
           {createFile(path, data)}
         });
   }
 
-  String path = '$ormAbsFolder';
+  String path = '$ormClassesFolder';
   final ormgen = OrmAbsClassesGenerator();
   performCreation(
-      path + 'persistent_model.dart', ormgen.generateAbsPersistentModelClass());
+      path + 'orm_classes.dart', ormgen.generateOrmClasses());
   if (modelMetadata.repository != 'sqflite') {
-    performCreation(
-        path + 'firestore_model.dart', ormgen.generateAbsFirestoreModelClass());
     performCreation(ormRepoFolder + 'firestore_repository.dart',
         ormgen.generateFirestoreRepositoryClass());
   }

@@ -89,6 +89,24 @@ class OrmModelGenerator {
     return cw;
   }
 
+  String generateUpdateMethod() {
+    String cw = 'Future<$modelName> update({';
+
+    modelFields.forEach((mf) {
+      cw += '\n    ${mf.type} ${mf.name},';
+    });
+    cw += '\n  }) {';
+    cw += '\n    $modelName record =  $modelName(';
+    modelFields.forEach((mf) {
+      cw += '\n      ${mf.name} ?? this.${mf.name},';
+    });
+    cw += '\n      this.id,\n      this.createdAt, \n      this.updatedAt';
+    cw += '\n    );';
+    cw += '\n    return $modelName.query().update(record); \n  }';
+
+    return cw;
+  }
+
   String generateHashCode() {
     String hc = '@override \n  int get hashCode => ';
     int fieldPerLine = 0;
@@ -108,8 +126,7 @@ class OrmModelGenerator {
 
   String generateOperator() {
     String o = '@override \n  bool operator ==(Object other) =>';
-    o +=
-        '\n      identical(this, other) || \n      other is $modelName &&';
+    o += '\n      identical(this, other) || \n      other is $modelName &&';
     o += '\n          runtimeType == other.runtimeType &&';
     modelFields.forEach((mf) {
       o += '\n          ${mf.name} == other.${mf.name} &&';
@@ -164,21 +181,10 @@ class OrmModelGenerator {
     return rj;
   }
 
-  String generateFinder() {
-    String find = '';
-    find += '$modelName.finder() : this(';
-    requiredFields.forEach((mf) {
-      find += 'null,';
-    });
-    find = find.substring(0, find.length - 1);
-    find += ');';
-    return find;
-  }
-
-  String getParentName() {
+  String getExecutor() {
     return modelMetadata.repository == 'Firestore'
-        ? 'FirestoreModel'
-        : 'SqliteModel';
+        ? 'FirestoreQueryExecutor'
+        : 'SqliteQueryExecutor';
   }
 
   String importRelModels() {
@@ -206,19 +212,19 @@ class OrmModelGenerator {
               model[model.length - 1] != 's' && rel == 'hasMany' ? '' : 's';
           String mn = modelName;
           relMethod += rel == 'HasMany'
-              ? '/// $mn Has Many $model$s \n  /// returns a $model finder filtered with the foreign constraint on $mn\'s id'
+              ? '/// $mn Has Many $model$s \n  /// returns a $model query builder filtered with the foreign constraint on $mn\'s id'
               : rel == 'HasOne'
                   ? '/// $mn Has One $model \n  /// returns the $model that belongs to $mn'
                   : '/// $mn Belongs To a $model \n  /// returns the $model who owns $mn';
           relMethod += '\n';
           relMethod +=
-              rel == 'HasMany' ? '  $model $m$s' : '  Future<$model> $m';
+              rel == 'HasMany' ? '  QueryExecutor<$model> $m$s' : '  Future<$model> $m';
           relMethod += '() { \n    return';
           relMethod += rel == 'BelongsTo'
-              ? ' $model.getById(${m}Id);'
+              ? ' $model.query().getById(${m}Id);'
               : rel == 'HasMany'
-                  ? ''' $model.finder()..where('${thisModelSC}_id','=',id);'''
-                  : ''' ($model.finder()..where('${thisModelSC}_id','=',id))
+                  ? ''' $model.query()..where('${thisModelSC}_id','=',id);'''
+                  : ''' ($model.query()..where('${thisModelSC}_id','=',id))
                   .getAll().first.then((result) => result.first);''';
         });
       });
@@ -231,49 +237,34 @@ class OrmModelGenerator {
     return '''
 // Auto generated model class
 
-${this.modelMetadata.repository == 'Firestore' ? 'import \'../../orm_abstract/firestore_model.dart\'' : 'import \'../../orm_abstract/sqlite_model.dart\''};
+import '../../orm_classes/orm_classes.dart';
 ${importRelModels()}
-class $modelName extends ${getParentName()} {
+class $modelName extends OrmModel {
 
   /// this is the name of ${this.modelMetadata.repository == 'Firestore' ? 'or path to the firestore collection' : ' Table'}
   /// e.g. ${this.modelMetadata.repository == 'Firestore' ? '\'todos\', or \'path/to/todos\'' : 'todo_table'}
-  @override
-  final String repo = '${modelMetadata.repoName}';
 
   ${generateModelFieldsDeclaration()}
 
   ${generateConstructor()}
-
-  ${generateCopyWith()}
 
   @override
   ${generateToJson()}
 
   ${generateFromJson()}
 
-  /// An empty constructor to conviniently perform queries on $modelName
-  ${generateFinder()}
+  /// Returns a query builder to perform queries on $modelName
+  static QueryExecutor<$modelName> query() => ${getExecutor()}<$modelName>
+          ('${modelMetadata.repoName}', (Map<String, dynamic> json) 
+          => $modelName.fromJson(json));
 
-  /// Returns a stream of $modelName based on the filter in 
-  /// the where and ordering properties.
-  @override
-  Stream<List<$modelName>> getAll() {
-    return super.getQuery().map((value) => value.map((json) => $modelName.fromJson(json)).toList());
-  }
+  /// Saves a $modelName and returns a new $modelName that represents the saved object.
+  Future<$modelName> save() => $modelName.query().save(this);
 
-  /// A convinience method to get a $modelName by its id
-  static Future<$modelName> getById(String id) {
-    return ($modelName.finder()..where('id', '=', id)).getAll().first.then((value) => value.first);
-  }
-
-  /// Method to save or update a $modelName. if $modelName has id, model is updated
-  /// else model created.
-  /// returns a new $modelName that represents the saved object.
-  @override
-  Future<$modelName> save() {
-    return super.save().then((value) => 
-      copyWith(id: value['id'], createdAt: value['createdAt'], updatedAt: value['updatedAt']));
-  }
+  /// Updates a $modelName and returns a new $modelName that represents the updated object.
+  ${generateUpdateMethod()}
+  
+  Future<void> delete() => $modelName.query().delete(id);
 
   ${generateHashCode()}
 
