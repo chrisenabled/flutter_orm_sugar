@@ -49,9 +49,9 @@ class CreateModelCommand extends Command {
         .where((element) => element != toSnakeCase(modelName))
         .toList();
     if (fs == null || fs.length == 0) return;
-    final addRel = prompts.getBool('Add a Relationship', defaultsTo: false);
-    if (addRel) {
-      List<String> relTypes = ['HasOne', 'HasMany', 'BelongsTo'];
+    bool addRel = prompts.getBool('Add a Relationship', defaultsTo: false);
+    while (addRel) {
+      List<String> relTypes = ['HasOne', 'HasMany'];
       final relType = prompts.choose('Select relationship type', relTypes,
           defaultsTo: relTypes[0]);
       final relModel = prompts.choose(
@@ -61,13 +61,8 @@ class CreateModelCommand extends Command {
         validate: (s) => s.toLowerCase() != modelName.toLowerCase(),
       );
       rels.addEntries([MapEntry(relModel, relType)]);
-      if (relType == relTypes[2]) {
-        String name = '${relModel}Id';
-        String type = repository == 'Firestore' ? 'String' : 'int';
-        modelFields.add(ModelField(name, type, true, null));
-      }
-      getRelationships(
-          fs.where((element) => !fs.contains(relModel)).toList());
+      fs.removeWhere((model) => model == relModel);
+      addRel = prompts.getBool('Add a Relationship', defaultsTo: false);
     }
   }
 
@@ -149,14 +144,9 @@ class CreateModelCommand extends Command {
 
   void run() {
     final ModelMetadata mm = getModelMetaData();
+    final config = Config.fromJson(getConfigJson()) ?? Config({});
     generateOrmClasses(mm);
-    generateModelClass(mm);
-    // if (mm.repoEngine != null) {
-    //   generateEntityClass(mm);
-    //   if (mm.repoEngine == 'sqflite')
-    //     generateSqlRepositoryClass(mm);
-    //   else
-    //     generateFirebaseRepositoryClass(mm);
-    // }
+    generateModelClass(mm, config);
+    
   }
 }
