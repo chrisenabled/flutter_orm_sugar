@@ -173,8 +173,8 @@ class OrmModelGenerator {
       });
     }
     rj += '\n      json["id"] as String,';
-    rj += '\n      json["createdAt"] as DateTime,';
-    rj += '\n      json["updatedAt"] as DateTime';
+    rj += '\n      DateTime.parse(json["createdAt"]),';
+    rj += '\n      DateTime.parse(json["updatedAt"])';
 
     rj += '\n    ); \n  }';
     return rj;
@@ -198,7 +198,7 @@ class OrmModelGenerator {
   }
 
   String generateRelMethod() {
-    String relMethod = '';
+    String relMethods = '\n';
     if (modelMetadata.relationships.length > 0) {
       modelMetadata.relationships.forEach((modelFileName, rel) {
         String m = toCamelCase(modelFileName);
@@ -207,25 +207,25 @@ class OrmModelGenerator {
         String s =
             model[model.length - 1] != 's' && rel == 'hasMany' ? '' : 's';
         String mn = modelName;
-        relMethod += rel == 'HasMany'
-            ? '/// $mn Has Many $model$s \n  /// returns a $model query builder filtered with the foreign constraint on $mn\'s id'
+        relMethods += rel == 'HasMany'
+            ? '  /// $mn Has Many $model$s \n  /// returns a $model query builder filtered with the foreign constraint on $mn\'s id'
             : rel == 'HasOne'
-                ? '/// $mn Has One $model \n  /// returns the $model that belongs to $mn'
-                : '/// $mn Belongs To a $model \n  /// returns the $model who owns $mn';
-        relMethod += '\n';
-        relMethod +=
+                ? '  /// $mn Has One $model \n  /// returns the $model that belongs to $mn'
+                : '  /// $mn Belongs To a $model \n  /// returns the $model who owns $mn';
+        relMethods += '\n';
+        relMethods +=
             rel == 'HasMany' ? '  QueryExecutor<$model> $m$s' : '  Future<$model> $m';
-        relMethod += '() { \n    return';
-        relMethod += rel == 'BelongsTo'
+        relMethods += '() { \n    return';
+        relMethods += rel == 'BelongsTo'
             ? ' $model.query().getById(${m}Id);'
             : rel == 'HasMany'
                 ? ''' $model.query()..where('${thisModelSC}_id','=',id);'''
                 : ''' ($model.query()..where('${thisModelSC}_id','=',id))
                 .getAll().first.then((result) => result.first);''';
+        relMethods += '\n  } \n';
       });
-      relMethod += '\n  }';
     }
-    return relMethod;
+    return relMethods;
   }
 
   String generateClass() {
@@ -235,9 +235,6 @@ class OrmModelGenerator {
 import '../../orm_classes/orm_classes.dart';
 ${importRelModels()}
 class $modelName extends OrmModel {
-
-  /// this is the name of ${this.modelMetadata.repository == 'Firestore' ? 'or path to the firestore collection' : ' Table'}
-  /// e.g. ${this.modelMetadata.repository == 'Firestore' ? '\'todos\', or \'path/to/todos\'' : 'todo_table'}
 
   ${generateModelFieldsDeclaration()}
 

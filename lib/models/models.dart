@@ -23,8 +23,7 @@ class Config {
   String toString() {
     return '''
 {
-  "models": {
-    ${modelsString()} 
+  "models": {${modelsString()} 
   }
 }
         ''';
@@ -46,7 +45,7 @@ class ModelMetadata {
     relationships.forEach((rel, model) {
       rels += '\n        "$rel": "$model",';
     });
-    rels = rels.substring(0, rels.length - 1);
+    rels = ['',null].contains(rels)? rels : rels.substring(0, rels.length - 1);
     return rels;
   }
 
@@ -63,13 +62,13 @@ class ModelMetadata {
     return '''
     {
       "modelName": "$modelName",
-      "modelFields": [${modelFieldsString()}  ],
+      "modelFields": [${modelFieldsString()}  
+      ],
       "repository": "$repository", 
       "repoName": "$repoName", 
       "relationships": {${relationshipsString()}      
       }
-    }
-        ''';
+    }''';
   }
 
   static ModelMetadata fromJson(json) {
@@ -108,34 +107,14 @@ class ModelField {
   };
 
   @override
-  int get hashCode =>
-      name.hashCode ^
-      type.hashCode ^
-      isRequired.hashCode ^
-      defaultValue.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ModelField &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          type == other.type &&
-          isRequired == other.isRequired &&
-          defaultValue == other.defaultValue;
-
-  @override
   String toString() {
     return ''' 
         {
           "name": "$name",
           "type": "$type",
           "isRequired": $isRequired, 
-          "defaultValue": ${[
-      '',
-      null
-    ].contains(defaultValue) ? null : defaultValue.runtimeType != String ? defaultValue : '\"$defaultValue\"'}  
-        }
-    ''';
+          "defaultValue": ${['',null].contains(defaultValue) ? null :
+           defaultValue.runtimeType != String ? defaultValue : '\"$defaultValue\"'}  
+        }''';
   }
 }

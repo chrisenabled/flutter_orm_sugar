@@ -9,17 +9,17 @@ import 'package:flutter_orm_sugar/tmpl_generators/sql_repo_gen.dart';
 
 import 'constants.dart';
 
-bool hasRepoDep(String repoDep) {
-  bool hasDep = false;
-  if (File(pubspecFile).existsSync()) {
-    String content = File(pubspecFile).readAsStringSync();
-    if (content.replaceAll(new RegExp(r"\s+"), "").contains(repoDep))
-      hasDep = true;
-  }
-  return hasDep;
-}
+// bool hasRepoDep(String repoDep) {
+//   bool hasDep = false;
+//   if (File(pubspecFile).existsSync()) {
+//     String content = File(pubspecFile).readAsStringSync();
+//     if (content.replaceAll(new RegExp(r"\s+"), "").contains(repoDep))
+//       hasDep = true;
+//   }
+//   return hasDep;
+// }
 
-void generateModelClass(ModelMetadata modelMetadata) {
+void generateModelClass(ModelMetadata modelMetadata, Config config) {
   String modelString = OrmModelGenerator(modelMetadata).generateClass();
   String modelFileName = toSnakeCase(modelMetadata.modelName);
   String path = '$ormModelFolder$modelFileName/';
@@ -27,7 +27,6 @@ void generateModelClass(ModelMetadata modelMetadata) {
   if (File(path).existsSync()) {
     Directory('$ormModelFolder$modelFileName').deleteSync(recursive: true);
   }
-  final config = Config.fromJson(getConfigJson()) ?? Config({});
   final models = config.models;
   models[modelFileName] = modelMetadata;
   modelMetadata.relationships.forEach((model, rel) {
@@ -44,9 +43,8 @@ void generateModelClass(ModelMetadata modelMetadata) {
             String type =
                 modelMetadata.repository == 'Firestore' ? 'String' : 'int';
             final mf = ModelField(name, type, true, null);
-            m.modelFields.remove(mf);
+            m.modelFields.removeWhere((mf) => mf.name == name) ;
             m.modelFields.add(mf);
-            print(mf.toString());
             models[model] = m;
           }
           break;
@@ -84,7 +82,7 @@ void generateOrmClasses(ModelMetadata modelMetadata) {
   String path = '$ormClassesFolder';
   final ormgen = OrmAbsClassesGenerator();
   performCreation(path + 'orm_classes.dart', ormgen.generateOrmClasses());
-  if (modelMetadata.repository != 'sqflite') {
+  if (modelMetadata.repository.toLowerCase() != 'sqflite') {
     performCreation(ormRepoFolder + 'firestore_repository.dart',
         ormgen.generateFirestoreRepositoryClass());
   }
@@ -94,16 +92,16 @@ void createFile(path, data) {
   File(path).create(recursive: true).then((file) => file.writeAsString(data));
 }
 
-void updateIndexFile(ModelMetadata modelMetadata, classPath) {
-  String path = '$ormFolder${modelMetadata.modelName}/index.dart';
-  String exportStmt = 'export \'$classPath\';';
-  File(path).createSync(recursive: true);
-  List<String> contents = File(path).readAsLinesSync();
-  if (!contents.contains(exportStmt)) {
-    contents.add(exportStmt);
-    File(path).writeAsStringSync(contents.join('\n'));
-  }
-}
+// void updateIndexFile(ModelMetadata modelMetadata, classPath) {
+//   String path = '$ormFolder${modelMetadata.modelName}/index.dart';
+//   String exportStmt = 'export \'$classPath\';';
+//   File(path).createSync(recursive: true);
+//   List<String> contents = File(path).readAsLinesSync();
+//   if (!contents.contains(exportStmt)) {
+//     contents.add(exportStmt);
+//     File(path).writeAsStringSync(contents.join('\n'));
+//   }
+// }
 
 Map getConfigJson() {
   File(ormConfigFile).createSync(recursive: true);
