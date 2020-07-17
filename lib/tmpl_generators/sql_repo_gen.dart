@@ -1,12 +1,12 @@
-import 'package:flutter_orm_sugar/models/model_metadata.dart';
+// part of 'orm_classes.dart';
+import 'package:flutter_orm_sugar/models/models.dart';
 
-class SqlRepositoryGenerator {
+class SqlSchemaGenerator {
   final ModelMetadata modelMetadata;
 
   String modelName;
 
-  SqlRepositoryGenerator(this.modelMetadata)
-      : modelName = modelMetadata.modelName;
+  SqlSchemaGenerator(this.modelMetadata) : modelName = modelMetadata.modelName;
 
   String getSqlFieldType(String fieldName) {
     switch (fieldName) {
@@ -37,6 +37,31 @@ class SqlRepositoryGenerator {
     return sqlFields;
   }
 
+  String foreignKeys() {
+    String foreignKeys = '';
+    if (modelMetadata.relationships.length > 0) {
+      modelMetadata.relationships.forEach((tableName, rel) {
+        if (rel == 'BelongsTo') {
+          foreignKeys +=
+            '\n        FOREIGN KEY (${tableName}_id) REFERENCES $tableName(id) ON DELETE CASCADE,';
+        }
+      });
+    }
+    foreignKeys = foreignKeys.substring(0, foreignKeys.length - 1);
+    return foreignKeys;
+  }
+
+  String generateTableSchema() {
+    return '''
+  static void createTable$modelName(batch) {
+    batch.execute('DROP TABLE IF EXISTS ${this.modelName}');
+    batch.execute(\'\'\' CREATE TABLE ${this.modelName} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,${sqlIncludeFields()},${foreignKeys()}
+    )\'\'\');
+  }
+    ''';
+  }
+
   String generateClass() {
     String camelCaseName = modelName[0].toLowerCase() + modelName.substring(1);
     String s = modelName[modelName.length - 1] != 's' ? 's' : '';
@@ -54,13 +79,6 @@ class Sql${modelName + s}Repository {
   final db;
 
   Sql${modelName + s}Repository(this.db);
-
-  static void createTable(batch) {
-    batch.execute('DROP TABLE IF EXISTS ${this.modelName}');
-    batch.execute(\'\'\' CREATE TABLE ${this.modelName} (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, ${sqlIncludeFields()}
-    )\'\'\');
-  }
 
   Future<$modelName> addNew$modelName($modelName $camelCaseName) async {
 

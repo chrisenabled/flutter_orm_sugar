@@ -2,6 +2,7 @@ const String ormFolder = '../lib/orm_module/';
 const String ormClassesFolder = ormFolder + 'orm_classes/';
 const String ormRepoFolder = ormFolder + 'orm_repositories/';
 const String ormModelFolder = ormFolder + 'orm_models/';
+const String ormConfigFile = ormFolder + 'config.json';
 const String pubspecFile = '../pubspec.yaml';
 
 /// Converts a string to snake_case.
