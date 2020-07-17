@@ -1,6 +1,5 @@
 import 'package:flutter_orm_sugar/constants.dart';
-import 'package:flutter_orm_sugar/models/model_field.dart';
-import 'package:flutter_orm_sugar/models/model_metadata.dart';
+import 'package:flutter_orm_sugar/models/models.dart';
 
 import '../constants.dart';
 
@@ -190,10 +189,8 @@ class OrmModelGenerator {
   String importRelModels() {
     String relImports = '';
     if (modelMetadata.relationships.length > 0) {
-      modelMetadata.relationships.forEach((rel) {
-        rel.forEach((rel, model) {
-          relImports += '\nimport \'../$model/$model.dart\';';
-        });
+      modelMetadata.relationships.forEach((model, rel) {
+        relImports += '\nimport \'../$model/$model.dart\';';
       });
     }
     relImports += '\n';
@@ -203,30 +200,28 @@ class OrmModelGenerator {
   String generateRelMethod() {
     String relMethod = '';
     if (modelMetadata.relationships.length > 0) {
-      modelMetadata.relationships.forEach((rel) {
-        rel.forEach((rel, modelFileName) {
-          String m = toCamelCase(modelFileName);
-          String model = toUpperCamelCase(modelFileName);
-          String thisModelSC = toSnakeCase(modelName);
-          String s =
-              model[model.length - 1] != 's' && rel == 'hasMany' ? '' : 's';
-          String mn = modelName;
-          relMethod += rel == 'HasMany'
-              ? '/// $mn Has Many $model$s \n  /// returns a $model query builder filtered with the foreign constraint on $mn\'s id'
-              : rel == 'HasOne'
-                  ? '/// $mn Has One $model \n  /// returns the $model that belongs to $mn'
-                  : '/// $mn Belongs To a $model \n  /// returns the $model who owns $mn';
-          relMethod += '\n';
-          relMethod +=
-              rel == 'HasMany' ? '  QueryExecutor<$model> $m$s' : '  Future<$model> $m';
-          relMethod += '() { \n    return';
-          relMethod += rel == 'BelongsTo'
-              ? ' $model.query().getById(${m}Id);'
-              : rel == 'HasMany'
-                  ? ''' $model.query()..where('${thisModelSC}_id','=',id);'''
-                  : ''' ($model.query()..where('${thisModelSC}_id','=',id))
-                  .getAll().first.then((result) => result.first);''';
-        });
+      modelMetadata.relationships.forEach((modelFileName, rel) {
+        String m = toCamelCase(modelFileName);
+        String model = toUpperCamelCase(modelFileName);
+        String thisModelSC = toSnakeCase(modelName);
+        String s =
+            model[model.length - 1] != 's' && rel == 'hasMany' ? '' : 's';
+        String mn = modelName;
+        relMethod += rel == 'HasMany'
+            ? '/// $mn Has Many $model$s \n  /// returns a $model query builder filtered with the foreign constraint on $mn\'s id'
+            : rel == 'HasOne'
+                ? '/// $mn Has One $model \n  /// returns the $model that belongs to $mn'
+                : '/// $mn Belongs To a $model \n  /// returns the $model who owns $mn';
+        relMethod += '\n';
+        relMethod +=
+            rel == 'HasMany' ? '  QueryExecutor<$model> $m$s' : '  Future<$model> $m';
+        relMethod += '() { \n    return';
+        relMethod += rel == 'BelongsTo'
+            ? ' $model.query().getById(${m}Id);'
+            : rel == 'HasMany'
+                ? ''' $model.query()..where('${thisModelSC}_id','=',id);'''
+                : ''' ($model.query()..where('${thisModelSC}_id','=',id))
+                .getAll().first.then((result) => result.first);''';
       });
       relMethod += '\n  }';
     }

@@ -1,8 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_orm_sugar/generator.dart';
-import 'package:flutter_orm_sugar/models/model_field.dart';
-import 'package:flutter_orm_sugar/models/model_metadata.dart';
+import 'package:flutter_orm_sugar/models/models.dart';
 import 'package:flutter_orm_sugar/prompts.dart' as prompts;
 import 'package:args/command_runner.dart';
 
@@ -13,7 +12,7 @@ class CreateModelCommand extends Command {
   final description = 'Generates a Model Class';
 
   final List<ModelField> modelFields = [];
-  final List<Map<String, String>> rels = [];
+  final Map<String, dynamic> rels = {};
   String modelName;
   String repoName;
   String repository;
@@ -47,28 +46,28 @@ class CreateModelCommand extends Command {
     fs ??= Directory(ormModelFolder)
         .listSync()
         .map((e) => e.path.split('/').last)
-        .where((element) => element != modelName.toLowerCase())
+        .where((element) => element != toSnakeCase(modelName))
         .toList();
     if (fs == null || fs.length == 0) return;
     final addRel = prompts.getBool('Add a Relationship', defaultsTo: false);
     if (addRel) {
       List<String> relTypes = ['HasOne', 'HasMany', 'BelongsTo'];
-      final chooseRel = prompts.choose('Select relationship type', relTypes,
+      final relType = prompts.choose('Select relationship type', relTypes,
           defaultsTo: relTypes[0]);
-      final chooseModel = prompts.choose(
+      final relModel = prompts.choose(
         'Select Model',
         fs,
         defaultsTo: fs[0],
         validate: (s) => s.toLowerCase() != modelName.toLowerCase(),
       );
-      rels.add({chooseRel: chooseModel});
-      if (chooseRel == relTypes[2]) {
-        String name = '${chooseModel}Id';
+      rels.addEntries([MapEntry(relModel, relType)]);
+      if (relType == relTypes[2]) {
+        String name = '${relModel}Id';
         String type = repository == 'Firestore' ? 'String' : 'int';
         modelFields.add(ModelField(name, type, true, null));
       }
       getRelationships(
-          fs.where((element) => !fs.contains(chooseModel)).toList());
+          fs.where((element) => !fs.contains(relModel)).toList());
     }
   }
 
