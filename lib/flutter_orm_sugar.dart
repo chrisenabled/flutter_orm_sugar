@@ -9,14 +9,14 @@ import 'package:flutter_orm_sugar/models/models.dart';
 import 'package:flutter_orm_sugar/prompts.dart' as prompts;
 
 Future<void> start(List<String> args) async {
-  final menuOptions = ['Create'];
+  final menuOptions = [create];
   final files = getModelFiles();
   Config config;
   if (File(ormConfigFile).existsSync()) {
     config = Config.fromJson(getConfigJson());
     if (files != null && files.length > 0)
-      menuOptions.addAll(['Edit', 'Delete']);
-    if (config.models.length > 0) menuOptions.add('Rebuild');
+      menuOptions.addAll([edit, delete]);
+    if (config.models.length > 0) menuOptions.add(buildConf);
   }
 
   final selectMenu = prompts.choose('Select Model Action', menuOptions,
