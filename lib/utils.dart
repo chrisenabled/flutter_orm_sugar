@@ -18,6 +18,11 @@ const String hasMany = 'HasMany';
 const String sqlite = 'sqlite';
 const String firestore = 'firestore';
 
+const String create = 'Create';
+const String edit = 'Edit';
+const String delete = 'Delete';
+const String buildConf = 'Build Config';
+
 /// Converts a string to snake_case.
 String toSnakeCase(String camelCase) {
   RegExp exp = RegExp(r'(?<=[a-z])[A-Z]');

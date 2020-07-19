@@ -5,7 +5,6 @@ import 'package:flutter_orm_sugar/models/models.dart';
 import 'package:flutter_orm_sugar/prompts.dart' as prompts;
 import 'package:flutter_orm_sugar/utils.dart';
 
-
 class MenuController {
   final name = 'model';
   final description = 'Generates a Model Class';
@@ -177,24 +176,34 @@ class MenuController {
     }
   }
 
-  Future<void> run() async {
-    switch (action) {
-      case 'Create':
+  void buildConfig() {
+    try {
+      Directory(ormModelFolder).deleteSync(recursive: true);
+      Directory(ormRepoFolder).deleteSync(recursive: true);
+    } catch (e) {
+      print("folder doesn't exisit or cannot be deleted");
+    }
+    config.models.forEach((_, mm) => run(action: create, modelMeta: mm));
+  }
+
+  Future<void> run({String action, ModelMetadata modelMeta}) async {
+    switch (action?? this.action) {
+      case create:
         {
-          final ModelMetadata mm = getModelMetaData();
+          modelMeta ??= getModelMetaData();
           await generateOrmClasses();
-          generateRepository(mm);
-          generateModelClass(mm, config);
+          generateRepository(modelMeta);
+          generateModelClass(modelMeta, config);
         }
         break;
-      case 'Edit':
+      case edit:
         {}
         break;
-      case 'Delete':
+      case delete:
         deleteModel();
         break;
-      case 'Rebuild':
-        {}
+      case buildConf:
+        buildConfig();
         break;
       default:
     }
