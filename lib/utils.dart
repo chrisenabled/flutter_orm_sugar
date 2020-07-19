@@ -23,6 +23,11 @@ const String edit = 'Edit';
 const String delete = 'Delete';
 const String buildConf = 'Build Config';
 
+const String addProp = 'Add a Property';
+const String deleteProp = 'Delete a Property';
+const String addRel = 'Add a Relationship';
+const String deleteRel = 'Remove a Relationship';
+
 /// Converts a string to snake_case.
 String toSnakeCase(String camelCase) {
   RegExp exp = RegExp(r'(?<=[a-z])[A-Z]');

@@ -9,24 +9,12 @@ import 'package:flutter_orm_sugar/tmpl_generators/sql_repo_gen.dart';
 
 import 'utils.dart';
 
-// bool hasRepoDep(String repoDep) {
-//   bool hasDep = false;
-//   if (File(pubspecFile).existsSync()) {
-//     String content = File(pubspecFile).readAsStringSync();
-//     if (content.replaceAll(new RegExp(r"\s+"), "").contains(repoDep))
-//       hasDep = true;
-//   }
-//   return hasDep;
-// }
-
 void generateModelClass(ModelMetadata modelMetadata, Config config) {
   String modelString = OrmModelGenerator(modelMetadata).generateClass();
   String modelFileName = toSnakeCase(modelMetadata.modelName);
   String path = '$ormModelFolder$modelFileName/';
   String modelFilePath = path + modelFileName + '.dart';
-  // if (File(path).existsSync()) {
-  //   Directory('$ormModelFolder$modelFileName').deleteSync(recursive: true);
-  // }
+  
   final models = config.models;
   models[modelFileName] = modelMetadata;
   modelMetadata.relationships.forEach((model, rel) {
