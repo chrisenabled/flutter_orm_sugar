@@ -33,21 +33,18 @@ class MenuController {
     return name;
   }
 
-  void getFieldsDetails() {
+  void getFieldsDetails({List<ModelField> fields}) {
     final addField = prompts.getBool('Add new Field', defaultsTo: true);
     if (addField) {
       final ModelField field = getFieldFromUserInput();
       if (field != null) {
-        modelFields.add(field);
+        fields != null ? fields.add(field) : modelFields.add(field);
       }
       getFieldsDetails();
     }
   }
 
-  void getRelationships([List<String> fs]) {
-    fs ??= getModelFiles()
-        ?.where((element) => element != toSnakeCase(modelName))
-        ?.toList();
+  void getRelationships([List<String> fs, Map<String, dynamic> relationships]) {
     if (fs == null || fs.length == 0) return;
     bool addRel = prompts.getBool('Add a Relationship', defaultsTo: false);
     while (addRel) {
@@ -60,7 +57,9 @@ class MenuController {
         defaultsTo: fs[0],
         validate: (s) => s.toLowerCase() != modelName.toLowerCase(),
       );
-      rels.addEntries([MapEntry(relModel, relType)]);
+      relationships != null
+          ? relationships.addEntries([MapEntry(relModel, relType)])
+          : rels.addEntries([MapEntry(relModel, relType)]);
       fs.removeWhere((model) => model == relModel);
       addRel = prompts.getBool('Add a Relationship', defaultsTo: false);
     }
@@ -138,7 +137,7 @@ class MenuController {
     } else {
       repoName = prompts.get('Enter collection path e.g(path/to/collection)');
     }
-    getRelationships();
+    getRelationships(files.where((f) => f != toSnakeCase(modelName)).toList());
     return ModelMetadata(modelName, modelFields, repoName, repository, rels);
   }
 
@@ -186,8 +185,53 @@ class MenuController {
     config.models.forEach((_, mm) => run(action: create, modelMeta: mm));
   }
 
+  void editModel() {
+    final modelFileName = prompts.choose('Select Model to edit', files);
+    final model = config.models[modelFileName];
+    final editMenu = [addProp];
+    if (model.modelFields.length > 0) editMenu.add(deleteProp);
+    if (files.length > 0) editMenu.add(addRel);
+    if (model.relationships.length > 0 &&
+        (model.relationships.values.contains(hasMany) ||
+            (model.relationships.values.contains(hasOne)))) {
+      editMenu.add(deleteRel);
+    }
+    final getEdit = prompts.choose('Select Editing', editMenu);
+    switch (getEdit) {
+      case addProp:
+        getFieldsDetails(fields: model.modelFields);
+        break;
+      case deleteProp:
+        {
+          final selectedProp = prompts.choose('Select Property to delete',
+              model.modelFields.map((mf) => mf.name).toList());
+          model.modelFields.removeWhere((mf) => mf.name == selectedProp);
+        }
+        break;
+      case addRel:
+        getRelationships(files.where((f) => f != modelFileName).toList(),
+         model.relationships);
+        break;
+      case deleteRel:
+        {
+          final selectedRel = prompts.choose(
+              'Select Relationship to remove',
+              model.relationships.keys
+                  .skipWhile((key) => model.relationships[key] == belongsTo)
+                  .toList());
+          model.relationships.remove(selectedRel);
+          final relatedModel = config.models[selectedRel];
+          relatedModel.relationships.remove(modelFileName);
+          run(action: create, modelMeta: relatedModel);
+        }
+        break;
+      default:
+    }
+    run(action: create, modelMeta: model);
+  }
+
   Future<void> run({String action, ModelMetadata modelMeta}) async {
-    switch (action?? this.action) {
+    switch (action ?? this.action) {
       case create:
         {
           modelMeta ??= getModelMetaData();
@@ -197,7 +241,9 @@ class MenuController {
         }
         break;
       case edit:
-        {}
+        {
+          editModel();
+        }
         break;
       case delete:
         deleteModel();
