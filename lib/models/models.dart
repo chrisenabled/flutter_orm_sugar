@@ -13,6 +13,7 @@ class Config {
 
   String modelsString() {
     String ms = '';
+    if (models.length == 0) return ms;
     models.forEach((name, model) {
       ms += '\n    "$name": ${model.toString()},';
     });
@@ -45,7 +46,8 @@ class ModelMetadata {
     relationships.forEach((rel, model) {
       rels += '\n        "$rel": "$model",';
     });
-    rels = ['',null].contains(rels)? rels : rels.substring(0, rels.length - 1);
+    rels =
+        ['', null].contains(rels) ? rels : rels.substring(0, rels.length - 1);
     return rels;
   }
 
@@ -113,8 +115,10 @@ class ModelField {
           "name": "$name",
           "type": "$type",
           "isRequired": $isRequired, 
-          "defaultValue": ${['',null].contains(defaultValue) ? null :
-           defaultValue.runtimeType != String ? defaultValue : '\"$defaultValue\"'}  
+          "defaultValue": ${[
+      '',
+      null
+    ].contains(defaultValue) ? null : defaultValue.runtimeType != String ? defaultValue : '\"$defaultValue\"'}  
         }''';
   }
 }

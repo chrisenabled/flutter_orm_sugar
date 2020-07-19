@@ -1,7 +1,7 @@
-import 'package:flutter_orm_sugar/constants.dart';
+import 'package:flutter_orm_sugar/utils.dart';
 import 'package:flutter_orm_sugar/models/models.dart';
 
-import '../constants.dart';
+import '../utils.dart';
 
 class OrmModelGenerator {
   final ModelMetadata modelMetadata;
@@ -181,7 +181,7 @@ class OrmModelGenerator {
   }
 
   String getExecutor() {
-    return modelMetadata.repository == 'Firestore'
+    return modelMetadata.repository == 'firestore'
         ? 'FirestoreQueryExecutor'
         : 'SqliteQueryExecutor';
   }
@@ -204,21 +204,21 @@ class OrmModelGenerator {
         String m = toCamelCase(modelFileName);
         String model = toUpperCamelCase(modelFileName);
         String thisModelSC = toSnakeCase(modelName);
-        String s =
-            model[model.length - 1] != 's' && rel == 'hasMany' ? '' : 's';
+        String s = model[model.length - 1] != 's' && rel == hasMany ? '' : 's';
         String mn = modelName;
-        relMethods += rel == 'HasMany'
+        relMethods += rel == hasMany
             ? '  /// $mn Has Many $model$s \n  /// returns a $model query builder filtered with the foreign constraint on $mn\'s id'
-            : rel == 'HasOne'
+            : rel == hasOne
                 ? '  /// $mn Has One $model \n  /// returns the $model that belongs to $mn'
                 : '  /// $mn Belongs To a $model \n  /// returns the $model who owns $mn';
         relMethods += '\n';
-        relMethods +=
-            rel == 'HasMany' ? '  QueryExecutor<$model> $m$s' : '  Future<$model> $m';
+        relMethods += rel == hasMany
+            ? '  QueryExecutor<$model> $m$s'
+            : '  Future<$model> $m';
         relMethods += '() { \n    return';
-        relMethods += rel == 'BelongsTo'
+        relMethods += rel == belongsTo
             ? ' $model.query().getById(${m}Id);'
-            : rel == 'HasMany'
+            : rel == hasMany
                 ? ''' $model.query()..where('${thisModelSC}_id','=',id);'''
                 : ''' ($model.query()..where('${thisModelSC}_id','=',id))
                 .getAll().first.then((result) => result.first);''';
@@ -233,6 +233,7 @@ class OrmModelGenerator {
 // Auto generated model class
 
 import '../../orm_classes/orm_classes.dart';
+
 ${importRelModels()}
 class $modelName extends OrmModel {
 

@@ -3,7 +3,6 @@ class OrmAbsClassesGenerator {
     return '''
 library orm_classes;
 
-import '../orm_repositories/firestore_repository.dart';
 
 /// Converts a string to a camelCase.
 String toCamelCase(String snakeCase) {
@@ -20,18 +19,11 @@ String toSnakeCase(String camelCase) {
       .toLowerCase();
 }
 
-/// Converts a map with camelCase keys to a map with snake_case keys.
-/// When useNamingConvention is set to true this method is called
-/// on the json keys to be saved or updated in the repository
 Map<String, dynamic> jsonSC(Map<String, dynamic> json) {
   final Map<String, dynamic> jsonSC = {};
   return jsonSC.map((key, value) => MapEntry(toSnakeCase(key), value));
 }
 
-/// Converts a map with snake_case keys to a map with camelCase keys.
-/// When useNamingConvention is set to true this method is called
-/// on the json keys gotten from the repository to be converted to
-/// the corresponding PersistentModel properties.
 Map<String, dynamic> jsonCC(Map<String, dynamic> json) {
   final Map<String, dynamic> jsonSC = {};
   return jsonSC.map((key, value) => MapEntry(toCamelCase(key), value));
@@ -82,7 +74,13 @@ abstract class QueryExecutor<T> {
   }
 
   void limit(int lim) => this._lim = lim;
-}
+}    
+    ''';
+  }
+
+  String generateFirestoreExecutorClass() {
+    return ''' 
+part of orm_classes; 
 
 class FirestoreQueryExecutor<T> extends QueryExecutor<T> {
   FirestoreQueryExecutor(String repo, ItemCreator<T> creator) : super(repo, creator);
@@ -128,8 +126,6 @@ class FirestoreQueryExecutor<T> extends QueryExecutor<T> {
     return FirebaseRepository().delete(repo, id.toString());
   }
 }
-    
-    
     ''';
   }
 
