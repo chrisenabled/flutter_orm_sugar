@@ -2,19 +2,25 @@ library flutter_orm_sugar;
 
 import 'dart:io';
 
-import 'package:args/command_runner.dart';
+import 'package:flutter_orm_sugar/menu/menu.dart';
+import 'package:flutter_orm_sugar/utils.dart';
+import 'package:flutter_orm_sugar/models/models.dart';
 
-import 'commands/create/create_cmd.dart';
+import 'package:flutter_orm_sugar/prompts.dart' as prompts;
 
-Future<void> createBreadFromArgs(List<String> args) async {
-  final commandRunner = CommandRunner('flutter_bread', 'A Model generator with BREAD to eat!')
-  ..addCommand(CreateCommand());
-  commandRunner.run(args).catchError((error) {
-    if (error is! UsageException) throw error;
-    print(error);
-    exit(64); // Exit code 64 indicates a usage error.
-  });
+Future<void> start(List<String> args) async {
+  final menuOptions = ['Create'];
+  final files = getModelFiles();
+  Config config;
+  if (File(ormConfigFile).existsSync()) {
+    config = Config.fromJson(getConfigJson());
+    if (files != null && files.length > 0)
+      menuOptions.addAll(['Edit', 'Delete']);
+    if (config.models.length > 0) menuOptions.add('Rebuild');
+  }
+
+  final selectMenu = prompts.choose('Select Model Action', menuOptions,
+      defaultsTo: menuOptions[0]);
+
+  MenuController(selectMenu, files, config?? Config({})).run();
 }
-
-
-

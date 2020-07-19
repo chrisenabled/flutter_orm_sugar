@@ -3,11 +3,10 @@ import 'dart:io';
 import 'package:flutter_orm_sugar/generator.dart';
 import 'package:flutter_orm_sugar/models/models.dart';
 import 'package:flutter_orm_sugar/prompts.dart' as prompts;
-import 'package:args/command_runner.dart';
+import 'package:flutter_orm_sugar/utils.dart';
 
-import '../../constants.dart';
 
-class CreateModelCommand extends Command {
+class MenuController {
   final name = 'model';
   final description = 'Generates a Model Class';
 
@@ -17,6 +16,11 @@ class CreateModelCommand extends Command {
   String repoName;
   String repository;
   final Map modelMetadata = {};
+  final String action;
+  final List<String> files;
+  final Config config;
+
+  MenuController(this.action, this.files, this.config);
 
   bool rightFormat(name) {
     final namingRegex = RegExp(r"^[a-zA-Z][a-zA-Z0-9]*");
@@ -42,16 +46,13 @@ class CreateModelCommand extends Command {
   }
 
   void getRelationships([List<String> fs]) {
-    if (!Directory(ormModelFolder).existsSync()) return;
-    fs ??= Directory(ormModelFolder)
-        .listSync()
-        .map((e) => e.path.split('/').last)
-        .where((element) => element != toSnakeCase(modelName))
-        .toList();
+    fs ??= getModelFiles()
+        ?.where((element) => element != toSnakeCase(modelName))
+        ?.toList();
     if (fs == null || fs.length == 0) return;
     bool addRel = prompts.getBool('Add a Relationship', defaultsTo: false);
     while (addRel) {
-      List<String> relTypes = ['HasOne', 'HasMany'];
+      List<String> relTypes = [hasOne, hasMany];
       final relType = prompts.choose('Select relationship type', relTypes,
           defaultsTo: relTypes[0]);
       final relModel = prompts.choose(
@@ -131,9 +132,9 @@ class CreateModelCommand extends Command {
   ModelMetadata getModelMetaData() {
     modelName = getNameDetails();
     getFieldsDetails();
-    repository = prompts.choose('Select repository', ['Sqlite', 'Firestore'],
-        defaultsTo: 'Sqlite');
-    if (repository == 'Sqlite') {
+    repository = prompts.choose('Select repository', [sqlite, firestore],
+        defaultsTo: sqlite);
+    if (repository == sqlite) {
       repoName = prompts.get('Enter table name e.g(todo)');
     } else {
       repoName = prompts.get('Enter collection path e.g(path/to/collection)');
@@ -142,11 +143,60 @@ class CreateModelCommand extends Command {
     return ModelMetadata(modelName, modelFields, repoName, repository, rels);
   }
 
-  void run() {
-    final ModelMetadata mm = getModelMetaData();
-    final config = Config.fromJson(getConfigJson()) ?? Config({});
-    generateOrmClasses(mm);
-    generateModelClass(mm, config);
-    
+  void deleteModel() {
+    final modelFileName = prompts.choose('Select Model to delete', files);
+    File('$ormModelFolder$modelFileName/$modelFileName.dart').deleteSync();
+    deleteDir('$ormModelFolder$modelFileName');
+    deleteDir(ormModelFolder);
+
+    final model = config.models.remove(modelFileName);
+
+    final List sameRepo = [];
+    config.models.forEach((key, m) {
+      if (model.repository == m.repository) sameRepo.add(m);
+      if (m.relationships[modelFileName] != null) {
+        m.relationships.remove(modelFileName);
+        generateModelClass(m, config);
+      }
+    });
+    if (sameRepo.length == 0) {
+      final repo = model.repository;
+      File('$ormRepoFolder${repo}_repository.dart').deleteSync();
+      File('$ormClassesFolder${repo}_query_executor.dart').deleteSync();
+      final lines = File(ormClassesFile).readAsLinesSync();
+      lines.removeWhere(
+          (element) => element.contains("part '${repo}_query_executor.dart';"));
+      lines.removeWhere((element) => element
+          .contains("import '../orm_repositories/${repo}_repository.dart';"));
+      File(ormClassesFile).writeAsStringSync(lines.join('\n'));
+    }
+    if (config.models.length > 0) {
+      saveConfig(config.toString());
+    } else {
+      File(ormFolder).deleteSync(recursive: true);
+    }
+  }
+
+  Future<void> run() async {
+    switch (action) {
+      case 'Create':
+        {
+          final ModelMetadata mm = getModelMetaData();
+          await generateOrmClasses();
+          generateRepository(mm);
+          generateModelClass(mm, config);
+        }
+        break;
+      case 'Edit':
+        {}
+        break;
+      case 'Delete':
+        deleteModel();
+        break;
+      case 'Rebuild':
+        {}
+        break;
+      default:
+    }
   }
 }
