@@ -22,5 +22,5 @@ Future<void> start(List<String> args) async {
   final selectMenu = prompts.choose('Select Model Action', menuOptions,
       defaultsTo: menuOptions[0]);
 
-  MenuController(selectMenu, files, config?? Config({})).run();
+  MenuController(selectMenu, files, config?? Config()).run();
 }

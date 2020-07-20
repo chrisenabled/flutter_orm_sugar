@@ -67,34 +67,24 @@ void generateSqlRepositoryClass(ModelMetadata modelMetadata) {
   //     modelMetadata, 'Sql${modelMetadata.modelName + s}Repository.dart');
 }
 
-Future<void> generateOrmClasses() async {
+Future<void> generateOrmClasses(List<String> repos) async {
   return createFile(
-      ormClassesFile, OrmAbsClassesGenerator().generateOrmClasses());
+    ormClassesFile, OrmAbsClassesGenerator()
+    .generateOrmClasses(repos), overwrite: true);
 }
 
 void generateRepository(ModelMetadata mm) {
   final ormgen = OrmAbsClassesGenerator();
   final repo = mm.repository;
   createFile(ormRepoFolder + '${repo}_repository.dart',
-      ormgen.generateFirestoreRepositoryClass());
-  File(ormClassesFile).readAsLines()
-  .then((lines) {
-    insertImports(lines, "part '${repo}_query_executor.dart';");
-    insertImports(lines, "import '../orm_repositories/${repo}_repository.dart';");
-    File(ormClassesFile).writeAsString(lines.join('\n'));
-  });
-  createFile(ormClassesFolder + '${repo}_query_executor.dart',
-      ormgen.generateFirestoreExecutorClass());
+    repo == 'firestore'? ormgen.generateFirestoreRepositoryClass()
+      : ormgen.generateSqliteRepositoryClass());
+  // File(ormClassesFile).readAsLines()
+  // .then((lines) {
+  //   insertImports(lines, "import '../orm_repositories/${repo}_repository.dart';");
+  //   File(ormClassesFile).writeAsString(lines.join('\n'));
+  // });
+  // createFile(ormClassesFolder + 'query_executor.dart',
+  //   ormgen.generateQueryExecutor());
   
 }
-
-// void updateIndexFile(ModelMetadata modelMetadata, classPath) {
-//   String path = '$ormFolder${modelMetadata.modelName}/index.dart';
-//   String exportStmt = 'export \'$classPath\';';
-//   File(path).createSync(recursive: true);
-//   List<String> contents = File(path).readAsLinesSync();
-//   if (!contents.contains(exportStmt)) {
-//     contents.add(exportStmt);
-//     File(path).writeAsStringSync(contents.join('\n'));
-//   }
-// }

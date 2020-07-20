@@ -1,14 +1,20 @@
 class Config {
   final Map<String, ModelMetadata> models;
+  final Map<String, Repo> repos;
 
-  Config(this.models);
+  Config({models, repos})
+      : models = models ?? {},
+        repos = repos ?? {};
 
   static Config fromJson(Map json) {
     Map modelsJson = json['models'];
     if (modelsJson == null || modelsJson.length == 0) return null;
     Map<String, ModelMetadata> models = modelsJson
         .map((name, modelJ) => MapEntry(name, ModelMetadata.fromJson(modelJ)));
-    return Config(models);
+    Map reposJson = json['repositories'];
+    Map<String, Repo> repos = reposJson
+        ?.map((name, modelJ) => MapEntry(name, Repo.fromJson(reposJson)));
+    return Config(models: models, repos: repos);
   }
 
   String modelsString() {
@@ -21,13 +27,43 @@ class Config {
     return ms;
   }
 
+  String reposString() {
+    String rs = '';
+    if (repos.length == 0) return rs;
+    repos.forEach((name, repo) {
+      rs += '\n    $name: ${repo.toString()},';
+    });
+    rs = rs.substring(0, rs.length - 1);
+    return rs;
+  }
+
   String toString() {
     return '''
 {
+  "repositories":{${reposString()}
+  },
   "models": {${modelsString()} 
   }
 }
-        ''';
+    ''';
+  }
+}
+
+class Repo {
+  final String dbName;
+
+  Repo(this.dbName);
+
+  static Repo fromJson(Map reposJson) {
+    return Repo(reposJson["name"]);
+  }
+
+  String toString() {
+    return ''' 
+    {
+      "name": "$dbName"
+    }
+    ''';
   }
 }
 

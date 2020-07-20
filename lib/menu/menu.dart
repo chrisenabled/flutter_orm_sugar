@@ -137,7 +137,8 @@ class MenuController {
     } else {
       repoName = prompts.get('Enter collection path e.g(path/to/collection)');
     }
-    getRelationships(files.where((f) => f != toSnakeCase(modelName)).toList());
+    getRelationships(
+        files?.where((f) => f != toSnakeCase(modelName))?.toList());
     return ModelMetadata(modelName, modelFields, repoName, repository, rels);
   }
 
@@ -160,13 +161,6 @@ class MenuController {
     if (sameRepo.length == 0) {
       final repo = model.repository;
       File('$ormRepoFolder${repo}_repository.dart').deleteSync();
-      File('$ormClassesFolder${repo}_query_executor.dart').deleteSync();
-      final lines = File(ormClassesFile).readAsLinesSync();
-      lines.removeWhere(
-          (element) => element.contains("part '${repo}_query_executor.dart';"));
-      lines.removeWhere((element) => element
-          .contains("import '../orm_repositories/${repo}_repository.dart';"));
-      File(ormClassesFile).writeAsStringSync(lines.join('\n'));
     }
     if (config.models.length > 0) {
       saveConfig(config.toString());
@@ -210,7 +204,7 @@ class MenuController {
         break;
       case addRel:
         getRelationships(files.where((f) => f != modelFileName).toList(),
-         model.relationships);
+            model.relationships);
         break;
       case deleteRel:
         {
@@ -235,15 +229,13 @@ class MenuController {
       case create:
         {
           modelMeta ??= getModelMetaData();
-          await generateOrmClasses();
+          await generateOrmClasses(config.repos.keys.toList());
           generateRepository(modelMeta);
           generateModelClass(modelMeta, config);
         }
         break;
       case edit:
-        {
-          editModel();
-        }
+        editModel();
         break;
       case delete:
         deleteModel();

@@ -49,6 +49,16 @@ String toUpperCamelCase(String someCase) {
   return cc[0].toUpperCase() + cc.substring(1);
 }
 
+Map<String, dynamic> jsonSC(Map<String, dynamic> json) {
+  final Map<String, dynamic> jsonSC = {};
+  return jsonSC.map((key, value) => MapEntry(toSnakeCase(key), value));
+}
+
+Map<String, dynamic> jsonCC(Map<String, dynamic> json) {
+  final Map<String, dynamic> jsonSC = {};
+  return jsonSC.map((key, value) => MapEntry(toCamelCase(key), value));
+}
+
 List<String> getModelFiles() {
   if (!Directory(ormModelFolder).existsSync()) return null;
   return Directory(ormModelFolder)
@@ -97,4 +107,21 @@ void insertImports(List<String> lines, String import) {
       null) {
     lines.insert(2, import);
   }
+}
+
+String getSqlFieldType(String fieldName) {
+    switch (fieldName) {
+      case ('bool'):
+      case ('int'):
+        return 'INTEGER';
+        break;
+      case ('String'):
+      case ('DateTime'):
+        return 'TEXT';
+        break;
+      case ('double'):
+        return 'REAL';
+      default:
+        return null;
+    }
 }

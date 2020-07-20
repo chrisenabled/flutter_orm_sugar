@@ -247,9 +247,9 @@ class $modelName extends OrmModel {
   ${generateFromJson()}
 
   /// Returns a query builder to perform queries on $modelName
-  static QueryExecutor<$modelName> query() => ${getExecutor()}<$modelName>
+  static QueryExecutor<$modelName> query() => QueryExecutor<$modelName>
           ('${modelMetadata.repoName}', (Map<String, dynamic> json) 
-          => $modelName.fromJson(json));
+          => $modelName.fromJson(json), '${modelMetadata.repository}');
 
   /// Saves a $modelName and returns a new $modelName that represents the saved object.
   Future<$modelName> save() => $modelName.query().save(this);
