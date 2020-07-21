@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter_orm_sugar/utils.dart';
 import 'package:flutter_orm_sugar/models/models.dart';
 import 'package:flutter_orm_sugar/tmpl_generators/orm_model_gen.dart';
@@ -52,7 +49,6 @@ void generateModelClass(ModelMetadata modelMetadata, Config config) {
   });
   createFile(modelFilePath, modelString, overwrite: true);
   saveConfig(config.toString());
-  // updateIndexFile(modelMetadata, '${modelMetadata.modelName}.dart');
 }
 
 void generateSqlRepositoryClass(ModelMetadata modelMetadata) {
@@ -63,28 +59,17 @@ void generateSqlRepositoryClass(ModelMetadata modelMetadata) {
   String path =
       '$ormFolder${modelMetadata.modelName}/Sql${modelMetadata.modelName + s}Repository.dart';
   createFile(path, modelString);
-  // updateIndexFile(
-  //     modelMetadata, 'Sql${modelMetadata.modelName + s}Repository.dart');
 }
 
-Future<void> generateOrmClasses(List<String> repos) async {
+Future<void> generateOrmClasses(List<String> dbs) async {
   return createFile(
     ormClassesFile, OrmAbsClassesGenerator()
-    .generateOrmClasses(repos), overwrite: true);
+    .generateOrmClasses(dbs), overwrite: true);
 }
 
-void generateRepository(ModelMetadata mm) {
+void generateRepository(String dbType) {
   final ormgen = OrmAbsClassesGenerator();
-  final repo = mm.repository;
-  createFile(ormRepoFolder + '${repo}_repository.dart',
-    repo == 'firestore'? ormgen.generateFirestoreRepositoryClass()
+  createFile(ormRepoFolder + '${dbType}_repository.dart',
+    dbType == firestore? ormgen.generateFirestoreRepositoryClass()
       : ormgen.generateSqliteRepositoryClass());
-  // File(ormClassesFile).readAsLines()
-  // .then((lines) {
-  //   insertImports(lines, "import '../orm_repositories/${repo}_repository.dart';");
-  //   File(ormClassesFile).writeAsString(lines.join('\n'));
-  // });
-  // createFile(ormClassesFolder + 'query_executor.dart',
-  //   ormgen.generateQueryExecutor());
-  
 }

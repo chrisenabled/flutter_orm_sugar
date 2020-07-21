@@ -17,11 +17,16 @@ const String hasMany = 'HasMany';
 
 const String sqlite = 'sqlite';
 const String firestore = 'firestore';
+const String api = 'api';
+const String sharedPref = 'sharedPref';
 
-const String create = 'Create';
-const String edit = 'Edit';
-const String delete = 'Delete';
-const String buildConf = 'Build Config';
+const String create = 'Create Model';
+const String edit = 'Edit Model';
+const String delete = 'Delete Model';
+const String buildConf = 'Build from Config';
+const String addDb = 'Add Database';
+const String deleteDb = 'Delete Database';
+const String editDb = 'Edit Database';
 
 const String addProp = 'Add a Property';
 const String deleteProp = 'Delete a Property';
@@ -110,18 +115,18 @@ void insertImports(List<String> lines, String import) {
 }
 
 String getSqlFieldType(String fieldName) {
-    switch (fieldName) {
-      case ('bool'):
-      case ('int'):
-        return 'INTEGER';
-        break;
-      case ('String'):
-      case ('DateTime'):
-        return 'TEXT';
-        break;
-      case ('double'):
-        return 'REAL';
-      default:
-        return null;
-    }
+  switch (fieldName) {
+    case ('bool'):
+    case ('int'):
+      return 'INTEGER';
+      break;
+    case ('String'):
+    case ('DateTime'):
+      return 'TEXT';
+      break;
+    case ('double'):
+      return 'REAL';
+    default:
+      return null;
+  }
 }

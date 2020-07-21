@@ -262,7 +262,7 @@ class FirebaseRepository extends Repository {
   }
 
   Future<String> update(String repo, Map<String, dynamic> values) {
-    String id = values['id' as String];
+    String id = values['id'];
     values.remove('id');
     return Firestore.instance
         .collection(repo)

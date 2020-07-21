@@ -1,10 +1,10 @@
 class Config {
   final Map<String, ModelMetadata> models;
-  final Map<String, Repo> repos;
+  final Map<String, DatabaseMetadata> databases;
 
   Config({models, repos})
       : models = models ?? {},
-        repos = repos ?? {};
+        databases = repos ?? {};
 
   static Config fromJson(Map json) {
     Map modelsJson = json['models'];
@@ -12,8 +12,8 @@ class Config {
     Map<String, ModelMetadata> models = modelsJson
         .map((name, modelJ) => MapEntry(name, ModelMetadata.fromJson(modelJ)));
     Map reposJson = json['repositories'];
-    Map<String, Repo> repos = reposJson
-        ?.map((name, modelJ) => MapEntry(name, Repo.fromJson(reposJson)));
+    Map<String, DatabaseMetadata> repos = reposJson?.map(
+        (name, modelJ) => MapEntry(name, DatabaseMetadata.fromJson(reposJson)));
     return Config(models: models, repos: repos);
   }
 
@@ -27,11 +27,11 @@ class Config {
     return ms;
   }
 
-  String reposString() {
+  String dbsString() {
     String rs = '';
-    if (repos.length == 0) return rs;
-    repos.forEach((name, repo) {
-      rs += '\n    $name: ${repo.toString()},';
+    if (databases.length == 0) return rs;
+    databases.forEach((name, repo) {
+      rs += '\n    "$name": ${repo.toString()},';
     });
     rs = rs.substring(0, rs.length - 1);
     return rs;
@@ -40,7 +40,7 @@ class Config {
   String toString() {
     return '''
 {
-  "repositories":{${reposString()}
+  "repositories":{${dbsString()}
   },
   "models": {${modelsString()} 
   }
@@ -49,19 +49,25 @@ class Config {
   }
 }
 
-class Repo {
-  final String dbName;
+class DatabaseMetadata {
+  final String name;
 
-  Repo(this.dbName);
+  DatabaseMetadata(this.name);
 
-  static Repo fromJson(Map reposJson) {
-    return Repo(reposJson["name"]);
+  static DatabaseMetadata fromJson(Map reposJson) {
+    return DatabaseMetadata(reposJson["name"]);
+  }
+
+  DatabaseMetadata copyWith({name}) {
+    return DatabaseMetadata(
+      this.name ?? name
+    );
   }
 
   String toString() {
     return ''' 
     {
-      "name": "$dbName"
+      "name": "$name"
     }
     ''';
   }
@@ -92,7 +98,7 @@ class ModelMetadata {
     modelFields.forEach((mf) {
       mfs += '\n${mf.toString()},';
     });
-    mfs = mfs.substring(0, mfs.length - 1);
+    if (mfs.length > 0) mfs = mfs.substring(0, mfs.length - 1);
     return mfs;
   }
 

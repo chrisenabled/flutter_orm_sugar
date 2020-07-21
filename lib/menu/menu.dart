@@ -224,13 +224,49 @@ class MenuController {
     run(action: create, modelMeta: model);
   }
 
+  Future<void> addADb() async {
+    final dbTypes = [firestore, sqlite, api, sharedPref];
+    final dbType = prompts.choose('Select Database to Add',
+        dbTypes.skipWhile((type) => config.databases.keys.contains(type)));
+    DatabaseMetadata dbMeta;
+    String name;
+    switch (dbType) {
+      case sqlite:
+        {
+          name = prompts.get('Enter a database name (e.g tododb)');
+        }
+        break;
+      case firestore:
+        {
+          name = prompts.get('Enter firebase root path if any (e.g tododb)');
+        }
+        break;
+      case api:
+        {
+          name = prompts
+              .get('Enter base api address (e.g http://weather.com/api/)');
+        }
+        break;
+      case sharedPref:
+        {
+          name = prompts.get('Enter shared preference name (e.g TodoPref)');
+        }
+        break;
+      default:
+    }
+    dbMeta = DatabaseMetadata(name);
+    config.databases.addAll({dbType: dbMeta});
+    await generateOrmClasses(config.databases.keys.toList());
+    generateRepository(dbType);
+    saveConfig(config.toString());
+  }
+
   Future<void> run({String action, ModelMetadata modelMeta}) async {
     switch (action ?? this.action) {
       case create:
         {
           modelMeta ??= getModelMetaData();
-          await generateOrmClasses(config.repos.keys.toList());
-          generateRepository(modelMeta);
+          await generateOrmClasses(config.databases.keys.toList());
           generateModelClass(modelMeta, config);
         }
         break;
@@ -242,6 +278,9 @@ class MenuController {
         break;
       case buildConf:
         buildConfig();
+        break;
+      case addDb:
+        addADb();
         break;
       default:
     }

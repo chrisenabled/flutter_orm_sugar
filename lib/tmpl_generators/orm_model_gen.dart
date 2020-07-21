@@ -89,6 +89,7 @@ class OrmModelGenerator {
   }
 
   String generateUpdateMethod() {
+    if (modelFields.length == 0) return '';
     String cw = 'Future<$modelName> update({';
 
     modelFields.forEach((mf) {
@@ -259,9 +260,9 @@ class $modelName extends OrmModel {
   
   Future<void> delete() => $modelName.query().delete(id);
 
-  ${generateHashCode()}
+  ${this.modelFields.length > 0? generateHashCode():''}
 
-  ${generateOperator()}
+  ${this.modelFields.length > 0? generateOperator():''}
 
   ${generateToString()}
 
