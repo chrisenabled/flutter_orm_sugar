@@ -1,9 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter_orm_sugar/utils.dart';
 import 'package:flutter_orm_sugar/models/models.dart';
 import 'package:flutter_orm_sugar/tmpl_generators/orm_model_gen.dart';
 import 'package:flutter_orm_sugar/tmpl_generators/orm_classes.dart';
 import 'package:flutter_orm_sugar/tmpl_generators/sql_repo_gen.dart';
-
 import 'utils.dart';
 
 void generateModelClass(ModelMetadata modelMetadata, Config config) {
@@ -11,7 +12,7 @@ void generateModelClass(ModelMetadata modelMetadata, Config config) {
   String modelFileName = toSnakeCase(modelMetadata.modelName);
   String path = '$ormModelFolder$modelFileName/';
   String modelFilePath = path + modelFileName + '.dart';
-  
+
   final models = config.models;
   models[modelFileName] = modelMetadata;
   modelMetadata.relationships.forEach((model, rel) {
@@ -62,14 +63,30 @@ void generateSqlRepositoryClass(ModelMetadata modelMetadata) {
 }
 
 Future<void> generateOrmClasses(List<String> dbs) async {
+  final fos = File(fosFile).readAsLinesSync();
+  final ormClassesExp = fos.firstWhere((line) => line.contains(expOrmClasses),
+      orElse: () => null);
+  if (dbs.length == 0) {
+    fos.removeWhere((line) => line.contains(ormClassesExp));
+    File(fosFile).writeAsString(fos.join('\n'));
+    return Directory(ormFolder).delete(recursive: true);
+  }
   return createFile(
-    ormClassesFile, OrmAbsClassesGenerator()
-    .generateOrmClasses(dbs), overwrite: true);
+          ormClassesFile, OrmAbsClassesGenerator().generateOrmClasses(dbs),
+          overwrite: true)
+      .then((value) {
+    if (['', null].contains(ormClassesExp)) {
+      fos.insert(1, expOrmClasses);
+      File(fosFile).writeAsString(fos.join('\n'));
+    }
+  });
 }
 
 void generateRepository(String dbType) {
   final ormgen = OrmAbsClassesGenerator();
-  createFile(ormRepoFolder + '${dbType}_repository.dart',
-    dbType == firestore? ormgen.generateFirestoreRepositoryClass()
-      : ormgen.generateSqliteRepositoryClass());
+  createFile(
+      ormRepoFolder + '${dbType}_repository.dart',
+      dbType == firestore
+          ? ormgen.generateFirestoreRepositoryClass()
+          : ormgen.generateSqliteRepositoryClass());
 }

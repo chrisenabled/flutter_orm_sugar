@@ -285,8 +285,8 @@ class MenuController {
     } else {
       config.databases.remove(dbToDel);
       File(ormRepoFolder + '${dbToDel}_repository.dart').delete();
-      generateOrmClasses(config.databases.keys.toList());
       saveConfig(config.toString());
+      generateOrmClasses(config.databases.keys.toList());
     }
   }
 

@@ -10,6 +10,9 @@ const String ormRepoFolder = ormFolder + 'orm_repositories/';
 const String ormModelFolder = ormFolder + 'orm_models/';
 const String ormConfigFile = ormFolder + 'config.json';
 const String pubspecFile = '../pubspec.yaml';
+const String fosFile = '../lib/flutter_orm_sugar.dart';
+final expOrmClasses =
+        "export 'package:flutter_orm_sugar/orm_module/orm_classes/orm_classes.dart';";
 
 const String belongsTo = 'BelongsTo';
 const String hasOne = 'HasOne';
