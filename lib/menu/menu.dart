@@ -130,8 +130,8 @@ class MenuController {
   ModelMetadata getModelMetaData() {
     modelName = getNameDetails();
     getFieldsDetails();
-    repository = prompts.choose('Select repository', [sqlite, firestore],
-        defaultsTo: sqlite);
+    final dbs = config.databases.keys.toList();
+    repository = prompts.choose('Select repository', dbs, defaultsTo: dbs[0]);
     if (repository == sqlite) {
       repoName = prompts.get('Enter table name e.g(todo)');
     } else {
@@ -158,15 +158,7 @@ class MenuController {
         generateModelClass(m, config);
       }
     });
-    if (sameRepo.length == 0) {
-      final repo = model.repository;
-      File('$ormRepoFolder${repo}_repository.dart').deleteSync();
-    }
-    if (config.models.length > 0) {
-      saveConfig(config.toString());
-    } else {
-      File(ormFolder).deleteSync(recursive: true);
-    }
+    saveConfig(config.toString());
   }
 
   void buildConfig() {
@@ -255,10 +247,47 @@ class MenuController {
       default:
     }
     dbMeta = DatabaseMetadata(name);
-    config.databases.addAll({dbType: dbMeta});
+    config.databases[dbType] = dbMeta;
     await generateOrmClasses(config.databases.keys.toList());
     generateRepository(dbType);
     saveConfig(config.toString());
+  }
+
+  void editADb() {
+    final dbs = config.databases.keys.toList();
+    final dbToEdit = prompts.choose('Select Database to Edit', dbs);
+    final db = config.databases[dbToEdit];
+    String field;
+    final json = {};
+    while (field != '--Done') {
+      final fields = db.toJson().keys.toList();
+      fields.add('--Done');
+      field = prompts.choose('Select field to change', fields);
+      if (field != '--Done') {
+        final newVal = prompts.get('Enter new value for $field');
+        json[field] = newVal;
+      }
+    }
+    DatabaseMetadata dbm = db.copyWithFromJson(json);
+    config.databases[dbToEdit] = dbm;
+    saveConfig(config.toString());
+  }
+
+  void deleteADb() {
+    final dbs = config.databases.keys.toList();
+    final dbToDel = prompts.choose('Select Database to Delete', dbs);
+    final models =
+        config.models.values.skipWhile((model) => model.repository != dbToDel);
+    if (models != null && models.length > 0) {
+      String ms = models.map((m) => m.modelName).toList().join(', ');
+      print(
+          'These models: [$ms] use $dbToDel. First delete them before deleting $dbToDel');
+    } else {
+      config.databases.remove(dbToDel);
+      File(ormRepoFolder + '${dbToDel}_repository.dart').delete();
+      generateOrmClasses(config.databases.keys.toList());
+      saveConfig(config.toString());
+    }
   }
 
   Future<void> run({String action, ModelMetadata modelMeta}) async {
@@ -281,6 +310,12 @@ class MenuController {
         break;
       case addDb:
         addADb();
+        break;
+      case editDb:
+        editADb();
+        break;
+      case deleteDb:
+        deleteADb();
         break;
       default:
     }

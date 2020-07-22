@@ -8,12 +8,17 @@ class Config {
 
   static Config fromJson(Map json) {
     Map modelsJson = json['models'];
-    if (modelsJson == null || modelsJson.length == 0) return null;
-    Map<String, ModelMetadata> models = modelsJson
-        .map((name, modelJ) => MapEntry(name, ModelMetadata.fromJson(modelJ)));
+    Map<String, ModelMetadata> models;
+    Map<String, DatabaseMetadata> repos;
+    if (modelsJson != null) {
+      models = modelsJson.map(
+          (name, modelJ) => MapEntry(name, ModelMetadata.fromJson(modelJ)));
+    }
     Map reposJson = json['repositories'];
-    Map<String, DatabaseMetadata> repos = reposJson?.map(
-        (name, modelJ) => MapEntry(name, DatabaseMetadata.fromJson(reposJson)));
+    if (reposJson != null) {
+      repos = reposJson?.map((name, modelJ) =>
+          MapEntry(name, DatabaseMetadata.fromJson(reposJson)));
+    }
     return Config(models: models, repos: repos);
   }
 
@@ -58,10 +63,18 @@ class DatabaseMetadata {
     return DatabaseMetadata(reposJson["name"]);
   }
 
-  DatabaseMetadata copyWith({name}) {
-    return DatabaseMetadata(
-      this.name ?? name
-    );
+  DatabaseMetadata copyWith({String name}) {
+    return DatabaseMetadata(this.name ?? name);
+  }
+
+  DatabaseMetadata copyWithFromJson(Map json) {
+    return DatabaseMetadata(json['name'] ?? name);
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "name": name
+    };
   }
 
   String toString() {

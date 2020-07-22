@@ -1,9 +1,20 @@
 class OrmAbsClassesGenerator {
   String generateOrmClasses(List<String> repos) {
+    String getRepoImport() {
+      String imports = '';
+      repos.forEach((repo) {
+        imports +=
+            "import 'package:flutter_orm_sugar/orm_module/orm_repositories/${repo}_repository.dart';\n";
+      });
+      return imports;
+    }
+
     return '''
 library orm_classes;
 
 import 'package:flutter_orm_sugar/utils.dart';
+
+${getRepoImport()}
 
 abstract class OrmModel {
   var id;
@@ -38,7 +49,9 @@ ${generateQueryExecutor(repos)}
 
   String generateQueryExecutor(List<String> repos) {
     String getRepoClass(String repo) {
-      return repos.contains(repo) ? '${repo}Repository()' : 'null';
+      return repos.contains(repo.toLowerCase())
+          ? '${repo}Repository()'
+          : 'null';
     }
 
     return ''' 
@@ -56,7 +69,7 @@ class QueryExecutor<T> {
 
   QueryExecutor(this.repo, this._creator, String repositoryType):
     repository = repositoryType == 'firebase'? 
-    ${getRepoClass('Firebase')} : repositoryType == 'sqlite'? 
+    ${getRepoClass('Firestore')} : repositoryType == 'sqlite'? 
     ${getRepoClass('Sqlite')} : repositoryType == 'api'?
     ${getRepoClass('Api')} : ${getRepoClass('SharedPref')};
 
@@ -252,7 +265,7 @@ import \'package:cloud_firestore/cloud_firestore.dart\';
 
 import '../orm_classes/orm_classes.dart';
 
-class FirebaseRepository extends Repository {
+class FirestoreRepository extends Repository {
 
   Future<String> save(String repo, Map<String, dynamic> values) async {
     return Firestore.instance
