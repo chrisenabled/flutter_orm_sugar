@@ -10,6 +10,9 @@ const String ormRepoFolder = ormFolder + 'orm_repositories/';
 const String ormModelFolder = ormFolder + 'orm_models/';
 const String ormConfigFile = ormFolder + 'config.json';
 const String pubspecFile = '../pubspec.yaml';
+const String fosFile = '../lib/flutter_orm_sugar.dart';
+final expOrmClasses =
+        "export 'package:flutter_orm_sugar/orm_module/orm_classes/orm_classes.dart';";
 
 const String belongsTo = 'BelongsTo';
 const String hasOne = 'HasOne';
@@ -17,11 +20,16 @@ const String hasMany = 'HasMany';
 
 const String sqlite = 'sqlite';
 const String firestore = 'firestore';
+const String api = 'api';
+const String sharedPref = 'sharedPref';
 
-const String create = 'Create';
-const String edit = 'Edit';
-const String delete = 'Delete';
-const String buildConf = 'Build Config';
+const String create = 'Create Model';
+const String edit = 'Edit Model';
+const String delete = 'Delete Model';
+const String buildConf = 'Build from Config';
+const String addDb = 'Add Database';
+const String deleteDb = 'Delete Database';
+const String editDb = 'Edit Database';
 
 const String addProp = 'Add a Property';
 const String deleteProp = 'Delete a Property';
@@ -47,6 +55,16 @@ String toCamelCase(String snakeCase) {
 String toUpperCamelCase(String someCase) {
   String cc = toCamelCase(someCase);
   return cc[0].toUpperCase() + cc.substring(1);
+}
+
+Map<String, dynamic> jsonSC(Map<String, dynamic> json) {
+  final Map<String, dynamic> jsonSC = {};
+  return jsonSC.map((key, value) => MapEntry(toSnakeCase(key), value));
+}
+
+Map<String, dynamic> jsonCC(Map<String, dynamic> json) {
+  final Map<String, dynamic> jsonSC = {};
+  return jsonSC.map((key, value) => MapEntry(toCamelCase(key), value));
 }
 
 List<String> getModelFiles() {
@@ -96,5 +114,22 @@ void insertImports(List<String> lines, String import) {
           orElse: () => null) ==
       null) {
     lines.insert(2, import);
+  }
+}
+
+String getSqlFieldType(String fieldName) {
+  switch (fieldName) {
+    case ('bool'):
+    case ('int'):
+      return 'INTEGER';
+      break;
+    case ('String'):
+    case ('DateTime'):
+      return 'TEXT';
+      break;
+    case ('double'):
+      return 'REAL';
+    default:
+      return null;
   }
 }

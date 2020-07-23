@@ -15,6 +15,7 @@ class SqlSchemaGenerator {
         return 'INTEGER';
         break;
       case ('String'):
+      case ('DateTime'):
         return 'TEXT';
         break;
       case ('double'):

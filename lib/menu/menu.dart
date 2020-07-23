@@ -130,14 +130,15 @@ class MenuController {
   ModelMetadata getModelMetaData() {
     modelName = getNameDetails();
     getFieldsDetails();
-    repository = prompts.choose('Select repository', [sqlite, firestore],
-        defaultsTo: sqlite);
+    final dbs = config.databases.keys.toList();
+    repository = prompts.choose('Select repository', dbs, defaultsTo: dbs[0]);
     if (repository == sqlite) {
       repoName = prompts.get('Enter table name e.g(todo)');
     } else {
       repoName = prompts.get('Enter collection path e.g(path/to/collection)');
     }
-    getRelationships(files.where((f) => f != toSnakeCase(modelName)).toList());
+    getRelationships(
+        files?.where((f) => f != toSnakeCase(modelName))?.toList());
     return ModelMetadata(modelName, modelFields, repoName, repository, rels);
   }
 
@@ -157,22 +158,7 @@ class MenuController {
         generateModelClass(m, config);
       }
     });
-    if (sameRepo.length == 0) {
-      final repo = model.repository;
-      File('$ormRepoFolder${repo}_repository.dart').deleteSync();
-      File('$ormClassesFolder${repo}_query_executor.dart').deleteSync();
-      final lines = File(ormClassesFile).readAsLinesSync();
-      lines.removeWhere(
-          (element) => element.contains("part '${repo}_query_executor.dart';"));
-      lines.removeWhere((element) => element
-          .contains("import '../orm_repositories/${repo}_repository.dart';"));
-      File(ormClassesFile).writeAsStringSync(lines.join('\n'));
-    }
-    if (config.models.length > 0) {
-      saveConfig(config.toString());
-    } else {
-      File(ormFolder).deleteSync(recursive: true);
-    }
+    saveConfig(config.toString());
   }
 
   void buildConfig() {
@@ -210,7 +196,7 @@ class MenuController {
         break;
       case addRel:
         getRelationships(files.where((f) => f != modelFileName).toList(),
-         model.relationships);
+            model.relationships);
         break;
       case deleteRel:
         {
@@ -230,26 +216,106 @@ class MenuController {
     run(action: create, modelMeta: model);
   }
 
+  Future<void> addADb() async {
+    final dbTypes = [firestore, sqlite, api, sharedPref];
+    final dbType = prompts.choose('Select Database to Add',
+        dbTypes.skipWhile((type) => config.databases.keys.contains(type)));
+    DatabaseMetadata dbMeta;
+    String name;
+    switch (dbType) {
+      case sqlite:
+        {
+          name = prompts.get('Enter a database name (e.g tododb)');
+        }
+        break;
+      case firestore:
+        {
+          name = prompts.get('Enter firebase root path if any (e.g tododb)');
+        }
+        break;
+      case api:
+        {
+          name = prompts
+              .get('Enter base api address (e.g http://weather.com/api/)');
+        }
+        break;
+      case sharedPref:
+        {
+          name = prompts.get('Enter shared preference name (e.g TodoPref)');
+        }
+        break;
+      default:
+    }
+    dbMeta = DatabaseMetadata(name);
+    config.databases[dbType] = dbMeta;
+    await generateOrmClasses(config.databases.keys.toList());
+    generateRepository(dbType);
+    saveConfig(config.toString());
+  }
+
+  void editADb() {
+    final dbs = config.databases.keys.toList();
+    final dbToEdit = prompts.choose('Select Database to Edit', dbs);
+    final db = config.databases[dbToEdit];
+    String field;
+    final json = {};
+    while (field != '--Done') {
+      final fields = db.toJson().keys.toList();
+      fields.add('--Done');
+      field = prompts.choose('Select field to change', fields);
+      if (field != '--Done') {
+        final newVal = prompts.get('Enter new value for $field');
+        json[field] = newVal;
+      }
+    }
+    DatabaseMetadata dbm = db.copyWithFromJson(json);
+    config.databases[dbToEdit] = dbm;
+    saveConfig(config.toString());
+  }
+
+  void deleteADb() {
+    final dbs = config.databases.keys.toList();
+    final dbToDel = prompts.choose('Select Database to Delete', dbs);
+    final models =
+        config.models.values.skipWhile((model) => model.repository != dbToDel);
+    if (models != null && models.length > 0) {
+      String ms = models.map((m) => m.modelName).toList().join(', ');
+      print(
+          'These models: [$ms] use $dbToDel. First delete them before deleting $dbToDel');
+    } else {
+      config.databases.remove(dbToDel);
+      File(ormRepoFolder + '${dbToDel}_repository.dart').delete();
+      saveConfig(config.toString());
+      generateOrmClasses(config.databases.keys.toList());
+    }
+  }
+
   Future<void> run({String action, ModelMetadata modelMeta}) async {
     switch (action ?? this.action) {
       case create:
         {
           modelMeta ??= getModelMetaData();
-          await generateOrmClasses();
-          generateRepository(modelMeta);
+          await generateOrmClasses(config.databases.keys.toList());
           generateModelClass(modelMeta, config);
         }
         break;
       case edit:
-        {
-          editModel();
-        }
+        editModel();
         break;
       case delete:
         deleteModel();
         break;
       case buildConf:
         buildConfig();
+        break;
+      case addDb:
+        addADb();
+        break;
+      case editDb:
+        editADb();
+        break;
+      case deleteDb:
+        deleteADb();
         break;
       default:
     }
