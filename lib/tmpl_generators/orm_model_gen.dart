@@ -233,7 +233,7 @@ class OrmModelGenerator {
     return '''
 // Auto generated model class
 
-import '../../orm_classes/orm_classes.dart';
+import 'package:flutter_orm_sugar/flutter_orm_sugar.dart';
 
 ${importRelModels()}
 class $modelName extends OrmModel {
