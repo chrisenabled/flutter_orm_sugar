@@ -24,6 +24,11 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+# dart2js -O2 -o main.js main.dart
+# flutter pub get 
+# flutter packages pub global activate webdev
+# flutter packages pub global run webdev serve
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
