@@ -8,16 +8,22 @@ import 'package:flutter_orm_sugar/models/models.dart';
 
 import 'package:flutter_orm_sugar/prompts.dart' as prompts;
 
-Future<void> start() async {
-  final modelOptions = [create];
-  final files = getModelFiles();
+Config getConf() {
   Config config;
   if (File(ormConfigFile).existsSync()) {
     config = Config.fromJson(getConfigJson());
-    if (files != null && files.length > 0) modelOptions.addAll([edit, delete]);
-    if (config.models.length > 0) modelOptions.add(buildConf);
   }
-  config = config ?? Config();
+  return config ?? Config();
+}
+
+Future<void> start() async {
+  final modelOptions = [create];
+  final files = getModelFiles();
+  final config = getConf();
+  
+  if (files != null && files.length > 0) modelOptions.addAll([edit, delete]);
+  if (config.models.length > 0) modelOptions.add(buildConf);
+  
   final dbOptions = [addDb];
   if (config.databases != null && config.databases.length > 0) {
     dbOptions.addAll([editDb, deleteDb]);
@@ -41,6 +47,6 @@ Future startServer() async {
     final req = ReqHandler(request);
     final res = ResHandler(request.response);
     addCorsHeaders(res.response);
-    handleRequest(req, res);
+    handleRequest(req, res, getConf());
   }
 }

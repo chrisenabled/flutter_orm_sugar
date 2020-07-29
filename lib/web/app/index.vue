@@ -1,6 +1,6 @@
 <template>
   <div>
-    <q-layout view="hHh Lpr lff" >
+    <q-layout view="hHh Lpr lff" class="bg-grey-3" >
       <q-header elevated>
         <div class="bg-pink-9 text-white">
             <q-toolbar>
@@ -11,7 +11,7 @@
               <q-avatar>
                 <img src="assets/img/fos.svg">
               </q-avatar>
-              <q-toolbar-title><strong>Flutter ORM Sugar</strong> Framework</q-toolbar-title>
+              <q-toolbar-title><strong>Flutter ORM Sugar</strong> Library</q-toolbar-title>
             </q-toolbar>
         </div>
       </q-header>
@@ -30,7 +30,10 @@
         <q-scroll-area class="fit">
           <q-list v-for="(menuItem, index) in menuList" :key="index">
 
-            <q-item clickable :active="menuItem.label === 'Dashboard'" v-ripple>
+            <q-item clickable :active="menuItem.label === activeMenu" 
+              @click="setActiveMenu(menuItem.label)" v-ripple
+              active-class="text-yellow-3"
+            >
               <q-item-section avatar>
                 <q-icon :name="menuItem.icon" />
               </q-item-section>
@@ -80,11 +83,12 @@ module.exports = {
   data: function() {
       return {
         drawer: false,
-        menuList
+        menuList,
+        activeMenu: 'Dashboard'
       }
   },
   mounted: function () {
-    this.$router.push('/home/dashboard');
+    // this.$router.push('/home/dashboard');
   },
   computed: {
     username() {
@@ -93,6 +97,9 @@ module.exports = {
     }
   },
   methods: {
+    setActiveMenu(menu) {
+      this.activeMenu = menu
+    },
     goBack() {
       window.history.length > 1 ? this.$router.go(-1) : this.$router.push('/')
     }

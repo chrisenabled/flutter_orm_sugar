@@ -1,6 +1,7 @@
 import 'dart:io';
 
-typedef void OrmRequestCallback();
+typedef void GetCallback({params});
+typedef void PostCallback({params});
 
 class ResHandler {
   final HttpResponse response;
@@ -40,6 +41,9 @@ class ResHandler {
           break;
         default:
           contentType = ContentType('text', 'plain');
+      }
+      if (path.contains('favicon')) {
+        contentType = ContentType('image', 'x-icon');
       }
       response.headers.contentType = contentType;
       await response.addStream(file.openRead());
@@ -89,25 +93,25 @@ class ReqHandler {
       return knownPathsPool.contains(path);
   }
 
-  void GET(dynamic path, OrmRequestCallback ck) {
+  void GET(dynamic path, GetCallback ck) {
     addToPool(path);
     if (request.method != 'GET' || noMatch(path)) return;
-    ck();
+    ck(params: request.uri.queryParameters);
   }
 
-  void POST(String path, OrmRequestCallback ck) {
+  void POST(String path, PostCallback ck) {
     addToPool(path);
     if (request.method != 'POST' || noMatch(path)) return;
     ck();
   }
 
-  void notFound(String path, OrmRequestCallback ck) {
+  void notFound(String path, Function ck) {
     if (!inPool(path)) ck();
   }
 
-  void serveAssets(OrmRequestCallback ck) {
+  void serveAssets(Function ck) {
     final ext = request.uri.path.split('.').last;
-    if (['js', 'css', 'vue', 'woff', 'ttf','svg'].contains(ext)) {
+    if (['js', 'css', 'vue', 'woff', 'ttf', 'svg'].contains(ext)) {
       final file = File('../lib/web' + path);
       // if (ext == 'vue') print(request.headers.toString());
       if (file.existsSync()) addToPool(path);
