@@ -16,7 +16,7 @@
         </div>
       </q-header>
       <!-- this is where the Pages are injected -->
-      <q-page-container>
+      <q-page-container style="background-image: url(assets/img/wallpaper.jpg);background-size: contain;">
         <router-view></router-view>
       </q-page-container>
       <q-drawer
@@ -30,8 +30,8 @@
         <q-scroll-area class="fit">
           <q-list v-for="(menuItem, index) in menuList" :key="index">
 
-            <q-item clickable :active="menuItem.label === activeMenu" 
-              @click="setActiveMenu(menuItem.label)" v-ripple
+            <q-item clickable :active="menuItem.label === currentNav" 
+              @click="navigateTo(menuItem.label)" v-ripple
               active-class="text-yellow-3"
             >
               <q-item-section avatar>
@@ -80,25 +80,26 @@ const menuList = [
   }
 ]
 module.exports = {
-  data: function() {
+  data() {
       return {
         drawer: false,
-        menuList,
-        activeMenu: 'Dashboard'
+        menuList
       }
+  },
+  created () {
+    this.$actions.fetchConfig()
   },
   mounted: function () {
     // this.$router.push('/home/dashboard');
   },
   computed: {
-    username() {
-      // We will see what `params` is shortly
-      return this.$route.params.username
+    currentNav() {
+      return this.$nav.current
     }
   },
   methods: {
-    setActiveMenu(menu) {
-      this.activeMenu = menu
+    navigateTo(menu) {
+      this.$router.push({name: menu}).catch(()=>{})
     },
     goBack() {
       window.history.length > 1 ? this.$router.go(-1) : this.$router.push('/')
