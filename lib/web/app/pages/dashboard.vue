@@ -1,18 +1,21 @@
 <template>
     <q-page class="row q-ma-md justify-center">
         <div class="self-center">
-            <div v-if="loading" >
-                <q-spinner-cube
-                    color="orange"
-                    size="5.5em"></q-spinner-cube>
+            <div v-if="loading">
+                <q-spinner-cube color="orange" size="5.5em"></q-spinner-cube>
             </div>
 
             <div v-if="error" class="error">
-                {{ error }}
+                <q-banner rounded inline-actions class="text-white bg-red">
+                    <q-icon name="ti-face-sad"></q-icon> &nbsp; {{ error }}
+                    <template v-slot:action @click="fetchConfig">
+                        <q-btn flat color="white" label="Retry" />
+                    </template>
+                </q-banner>
             </div>
         </div>
-        <div class="column col q-col-gutter-y-xl">
-            <div v-if="config" class="row justify-center q-gutter-sm">
+        <div v-if="config" class="column col q-col-gutter-y-xl">
+            <div class="row justify-center q-gutter-sm">
                 <q-card v-if="Object.keys(config.repositories).length > 0"
                     class="my-card text-white col-md col-xs-12" flat
                     style="background: linear-gradient(to bottom, #1FD2E6, #37C0EE)">
@@ -57,7 +60,7 @@
                     </q-card-section>
                 </q-card>
             </div>
-            <div v-if="config" class="row q-gutter-md justify-center">
+            <div v-if="Object.keys(config.repositories).length" class="row q-gutter-md justify-center">
                 <q-card class="text-white col-md col-xs-5">
                     <q-card-section class="column justify-end">
                         <div class="row items-baseline">
@@ -105,16 +108,46 @@
                 </q-card>
             </div>
         
-            <div v-if="config && Object.keys(config.models).length > 0" class="q-pa-md">
+            <div v-if="Object.keys(config.models).length > 0" class="q-pa-md">
                 <q-table
                     class="my-sticky-header-table"
                     title="Collection Stats"
                     :data="Object.values(config.models)"
                     :columns="columns"
                     row-key="name"
+                    primary
+                    table-header-class="bg-blue-1"
+                    color="white"
                     flat
                     bordered
-                />
+                >
+                    <template v-slot:body="props">
+                        <q-tr :props="props">
+                            <q-td key="name" :props="props" >
+                                <q-icon class="text-pink" name="ti-layers-alt"></q-icon> 
+                                &nbsp; {{ props.row.modelName }}
+                            </q-td>
+                            <q-td key="fieldsCount" :props="props">
+                                <q-badge color="blue-5">
+                                {{ props.row.modelFields.length }}
+                                </q-badge>
+                            </q-td>
+                            <q-td key="name" :props="props">
+                                <q-icon name="ti-server" class="text-cyan"></q-icon> 
+                                &nbsp; {{ props.row.repository }}
+                            </q-td>
+                            <q-td key="repoName" :props="props">
+                                <q-badge color="deep-purple-10">
+                                {{ props.row.repoName }}
+                                </q-badge>
+                            </q-td>
+                            <q-td key="name" :props="props">
+                                <q-icon name="ti-link" class="text-green" ></q-icon> &nbsp; 
+                                    {{ Object.keys(props.row.relationships).length }}
+                                </q-td>
+                        </q-tr>
+                    </template>
+                </q-table>
             </div>
         </div>
     </q-page>
@@ -129,14 +162,14 @@ module.exports = {
           name: 'name',
           required: true,
           label: 'Collection',
-          align: 'left',
+          align: 'center',
           field: 'modelName',
           format: val => `${val}`,
           sortable: true
         },
         {
           name: 'fieldsCount',
-          align: 'left',
+          align: 'center',
           label: 'No. of Fields',
           field: row => row.modelFields.length,
           sortable: true
@@ -144,29 +177,29 @@ module.exports = {
         { 
             name: 'database', 
             label: 'Database', 
-            align: 'left',
+            align: 'center',
             field: 'repository', 
             sortable: true 
         },
         { 
             name: 'repoName', 
             label: 'Repo/Table', 
-            align: 'left',
+            align: 'center',
             field: 'repoName', 
             sortable: true 
         },
         {
           name: 'relationshipsCount',
-          label: 'No. of Relationships',
-          align: 'left',
+          label: 'No. of Relations',
+          align: 'center',
           field: row => Object.keys(row.relationships).length,
           sortable: true
         }
       ],
     }
   },
-  created () {
-    this.fetchConfig()
+  mounted: function () {
+    this.$nav.current = 'Dashboard'
   },
   watch: {
     // call again the method if the route changes
@@ -191,9 +224,6 @@ module.exports = {
     },
   },
   methods: {
-    fetchConfig () {
-      this.$actions.fetchConfig()
-    },
     getDbUsage(dbName) {
         modelsArr = Object.values(this.$store.config.data['models'])
         count = modelsArr.length

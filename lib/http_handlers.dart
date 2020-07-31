@@ -39,6 +39,9 @@ class ResHandler {
         case 'svg':
           contentType = ContentType('image', 'svg+xml');
           break;
+        case 'jpg':
+          contentType = ContentType('image', 'jpg');
+          break;
         default:
           contentType = ContentType('text', 'plain');
       }
@@ -111,9 +114,8 @@ class ReqHandler {
 
   void serveAssets(Function ck) {
     final ext = request.uri.path.split('.').last;
-    if (['js', 'css', 'vue', 'woff', 'ttf', 'svg'].contains(ext)) {
+    if (['js', 'css', 'vue', 'woff', 'ttf', 'svg','jpg','png'].contains(ext)) {
       final file = File('../lib/web' + path);
-      // if (ext == 'vue') print(request.headers.toString());
       if (file.existsSync()) addToPool(path);
       ck();
     }
