@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter_orm_sugar/fos_services.dart';
 import 'package:flutter_orm_sugar/http_handlers.dart';
 import 'package:flutter_orm_sugar/models/models.dart';
 
@@ -14,17 +15,30 @@ void addCorsHeaders(HttpResponse response) {
 Future<void> handleRequest(
     ReqHandler req, ResHandler res, Config config) async {
   print('handling request to: ${req.path}${req.request.uri.queryParameters}');
+  final fosServices = FosServices(config);
+
   req.serveAssets(() async {
     await res.sendAsset(req.path);
   });
 
-  req.GET(['/', '/main.html'], ({params}) async {
+  req.GET(['/', '/main.html'], (params) async {
     await res.sendHtml('main.html');
   });
 
-  req.GET('/config', ({params}) async {
+  req.GET('/config', (params) async {
     String conf = config.toString();
     await res.send(conf);
+  });
+
+  req.POST('/addDb', (body) {
+    print(body['db'].toString());
+    fosServices
+        .addDb(body['db']['type'], DatabaseMetadata.fromJson(body['db']))
+        .then((value) {
+      res.send('success', 200);
+    }).catchError((e) {
+      res.send(e, HttpStatus.badRequest);
+    });
   });
 
   req.notFound(req.request.uri.path, () async {

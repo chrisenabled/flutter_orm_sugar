@@ -2,24 +2,24 @@ class Config {
   final Map<String, ModelMetadata> models;
   final Map<String, DatabaseMetadata> databases;
 
-  Config({models, repos})
-      : models = models ?? {},
-        databases = repos ?? {};
+  Config({Map<String, ModelMetadata> models, Map<String, DatabaseMetadata> dbs})
+    : models = models ?? {},
+      databases = dbs ?? {};
 
   static Config fromJson(Map json) {
     Map modelsJson = json['models'];
     Map<String, ModelMetadata> models;
-    Map<String, DatabaseMetadata> repos;
+    Map<String, DatabaseMetadata> dbs;
     if (modelsJson != null) {
       models = modelsJson.map(
-          (name, modelJ) => MapEntry(name, ModelMetadata.fromJson(modelJ)));
+        (name, modelJ) => MapEntry(name, ModelMetadata.fromJson(modelJ)));
     }
-    Map reposJson = json['repositories'];
-    if (reposJson != null) {
-      repos = reposJson?.map((name, modelJ) =>
-          MapEntry(name, DatabaseMetadata.fromJson(reposJson)));
+    Map dbsJson = json['repositories'] as Map;
+    if (dbsJson != null && dbsJson.length > 0) {
+      dbs = dbsJson?.map((name, dbJson) =>
+        MapEntry(name, DatabaseMetadata.fromJson(dbJson)));
     }
-    return Config(models: models, repos: repos);
+    return Config(models: models, dbs: dbs);
   }
 
   String modelsString() {
@@ -35,8 +35,8 @@ class Config {
   String dbsString() {
     String rs = '';
     if (databases.length == 0) return rs;
-    databases.forEach((name, repo) {
-      rs += '\n    "$name": ${repo.toString()},';
+    databases.forEach((name, db) {
+      rs += '\n    "$name": ${db.toString()},';
     });
     rs = rs.substring(0, rs.length - 1);
     return rs;

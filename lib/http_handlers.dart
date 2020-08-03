@@ -1,7 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
-typedef void GetCallback({params});
-typedef void PostCallback({params});
+typedef void GetCallback(params);
+typedef void PostCallback(body);
 
 class ResHandler {
   final HttpResponse response;
@@ -56,7 +57,7 @@ class ResHandler {
 
   Future<void> send(String message, [int code]) async {
     if (code != null) response.statusCode = code;
-    response.writeln(message);
+    response.write(message);
     closeResponse();
   }
 }
@@ -99,13 +100,18 @@ class ReqHandler {
   void GET(dynamic path, GetCallback ck) {
     addToPool(path);
     if (request.method != 'GET' || noMatch(path)) return;
-    ck(params: request.uri.queryParameters);
+    ck(request.uri.queryParameters);
   }
 
-  void POST(String path, PostCallback ck) {
+  Future<void> POST(String path, PostCallback ck) async {
     addToPool(path);
-    if (request.method != 'POST' || noMatch(path)) return;
-    ck();
+    ContentType contentType = request.headers.contentType;
+    if (request.method != 'POST' ||
+        contentType?.mimeType != 'application/json' ||
+        noMatch(path)) return;
+    String content = await utf8.decoder.bind(request).join();
+    var data = jsonDecode(content) as Map;
+    ck(data);
   }
 
   void notFound(String path, Function ck) {
@@ -114,7 +120,8 @@ class ReqHandler {
 
   void serveAssets(Function ck) {
     final ext = request.uri.path.split('.').last;
-    if (['js', 'css', 'vue', 'woff', 'ttf', 'svg','jpg','png'].contains(ext)) {
+    if (['js', 'css', 'vue', 'woff', 'ttf', 'svg', 'jpg', 'png']
+        .contains(ext)) {
       final file = File('../lib/web' + path);
       if (file.existsSync()) addToPool(path);
       ck();

@@ -251,7 +251,10 @@ class MenuController {
   void deleteADb() {
     final dbs = config.databases.keys.toList();
     final dbToDel = prompts.choose('Select Database to Delete', dbs);
-    fosServices.deleteDb(dbToDel);
+    final error = fosServices.deleteDb(dbToDel);
+    if (!['', null].contains(error)) {
+      print(error);
+    }
   }
 
   Future<void> run({String action, ModelMetadata modelMeta}) async {

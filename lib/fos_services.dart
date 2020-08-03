@@ -10,11 +10,16 @@ class FosServices {
 
   FosServices(this.config);
 
-  addDb(String dbType, DatabaseMetadata db) async {
-    config.databases[dbType] = db;
-    await generateOrmClasses(config.databases.keys.toList());
-    generateRepository(dbType);
-    saveConfig(config.toString());
+  Future addDb(String dbType, DatabaseMetadata db) async {
+    try {
+      config.databases[dbType] = db;
+      await generateOrmClasses(config.databases.keys.toList());
+      generateRepository(dbType);
+      saveConfig(config.toString());
+      return Future.value(200);
+    } catch (e) {
+      return Future.error(e);
+    }
   }
 
   editDb(String dbToEdit, DatabaseMetadata db) {
@@ -53,7 +58,9 @@ class FosServices {
       if (m.relationships[modelFileName] != null) {
         m.relationships.remove(modelFileName);
         ModelField mf = m.modelFields.firstWhere(
-            (mf) => mf.name.contains(model.modelName.toLowerCase()));
+            (mf) => mf.name.contains(model.modelName.toLowerCase()),
+            orElse: () => null,
+        );
         if (mf != null) m.modelFields.remove(mf);
         generateModelClass(m, config);
       }

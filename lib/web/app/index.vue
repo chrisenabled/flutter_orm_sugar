@@ -1,22 +1,22 @@
 <template>
   <div>
-    <q-layout view="hHh Lpr lff" class="bg-grey-3" >
+    <q-layout view="hHh Lpr lff">
       <q-header elevated>
         <div class="bg-pink-9 text-white">
-            <q-toolbar>
-                <q-btn  flat dense @click="drawer = !drawer" icon="ti-menu" class="q-ml-sm q-pa-sm" />
-                <q-space />
-            </q-toolbar>
-            <q-toolbar inset>
-              <q-avatar>
-                <img src="assets/img/fos.svg">
-              </q-avatar>
-              <q-toolbar-title><strong>Flutter ORM Sugar</strong> Library</q-toolbar-title>
-            </q-toolbar>
+          <q-toolbar>
+              <q-btn  flat dense @click="drawer = !drawer" icon="ti-menu" class="q-ml-sm q-pa-sm" />
+              <q-space />
+          </q-toolbar>
+          <q-toolbar inset>
+            <q-avatar>
+              <img src="assets/img/fos.svg">
+            </q-avatar>
+            <q-toolbar-title><strong>Flutter ORM Sugar</strong> Library</q-toolbar-title>
+          </q-toolbar>
         </div>
       </q-header>
       <!-- this is where the Pages are injected -->
-      <q-page-container style="background-image: url(assets/img/wallpaper.jpg);background-size: contain;">
+      <q-page-container>
         <router-view></router-view>
       </q-page-container>
       <q-drawer
@@ -65,7 +65,7 @@ const menuList = [
   },
   {
     icon: 'ti-layers-alt',
-    label: 'Collections',
+    label: 'Objects',
     separator: false
   },
   {
