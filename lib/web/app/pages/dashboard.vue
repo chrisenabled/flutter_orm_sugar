@@ -14,17 +14,17 @@
                 </q-banner>
             </div>
         </div>
-        <div v-if="config" class="column col q-col-gutter-y-xl">
+        <div v-if="config" class="column col q-gutter-y-lg">
             <div class="row justify-center q-gutter-sm">
                 <q-card v-if="Object.keys(config.repositories).length > 0"
-                    class="my-card text-white col-md col-xs-12" flat
+                    class="my-card text-white col-md col-xs-12" 
                     style="background: linear-gradient(to bottom, #1FD2E6, #37C0EE)">
                     <q-card-section class="flex flex-center">
                         <q-avatar color="white" class="shadow-2" text-color="cyan-3" icon="ti-server" />
                     </q-card-section>
                     <q-card-section class="q-pt-none flex flex-center text-h4 text-weight-bolder">
                         {{Object.keys(config['repositories']).length}}
-                        <span class="text-caption">DB</span>
+                        <span class="text-caption">&nbsp;DB</span>
                     </q-card-section>
                     <q-card-section class="q-pt-none flex flex-center 
                     text-caption text-light-blue-1 text-weight-bold">
@@ -32,28 +32,28 @@
                     </q-card-section>
                 </q-card>
                 <q-card v-if="Object.keys(config.models).length > 0"
-                    class="my-card text-white col-md col-xs-12" flat
+                    class="my-card text-white col-md col-xs-12" 
                     style="background: linear-gradient(to bottom, #FFA291, #FE2051)">
                     <q-card-section class="flex flex-center">
                         <q-avatar color="white" class="shadow-2" text-color="red-3" icon="ti-layers-alt" />
                     </q-card-section>
                     <q-card-section class="q-pt-none flex flex-center text-h4 text-weight-bolder">
                         {{Object.keys(config['models']).length}}
-                        <span class="text-caption">ML</span>
+                        <span class="text-caption">&nbsp;OB</span>
                     </q-card-section>
                     <q-card-section class="q-pt-none flex flex-center text-caption text-red-1 text-weight-bold">
-                        Collections
+                        Objects
                     </q-card-section>
                 </q-card>
                 <q-card v-if="getRels != null"
-                    class="my-card text-white col-md col-xs-12" flat
+                    class="my-card text-white col-md col-xs-12" 
                     style="background: linear-gradient(to bottom, #3BB993, #0CA463)">
                     <q-card-section class="flex flex-center">
                         <q-avatar color="white" class="shadow-2" text-color="green-4" icon="ti-link" />
                     </q-card-section>
                     <q-card-section class="q-pt-none flex flex-center text-h4 text-weight-bolder">
                         {{getNoOfRels()}}
-                        <span class="text-caption">REL</span>
+                        <span class="text-caption">&nbsp;RL</span>
                     </q-card-section>
                     <q-card-section class="q-pt-none flex flex-center text-caption text-green-1 text-weight-bold">
                         Relations
@@ -61,7 +61,7 @@
                 </q-card>
             </div>
             <div v-if="Object.keys(config.repositories).length" class="row q-gutter-md justify-center">
-                <q-card class="text-white col-md col-xs-5">
+                <q-card v-if="config.repositories.firestore" class="text-white col-md col-xs-5">
                     <q-card-section class="column justify-end">
                         <div class="row items-baseline">
                             <span class="text-weight-bolder text-body1" 
@@ -73,7 +73,7 @@
                         <div class="text-caption q-mt-xs text-grey-6">Firestore usage</div>
                     </q-card-section>
                 </q-card>
-                <q-card class="text-white col-md col-xs-5">
+                <q-card v-if="config.repositories.sqlite" class="text-white col-md col-xs-5">
                     <q-card-section class="column justify-end">
                         <div class="row items-baseline">
                             <span class="text-weight-bolder text-body1" :style="{color: getUsageColor('sqlite')}">
@@ -84,7 +84,7 @@
                         <div class="text-caption q-mt-xs text-grey-6">Sqlite usage</div>
                     </q-card-section>
                 </q-card>
-                <q-card class="col-md col-xs-5">
+                <q-card v-if="config.repositories.api" class="col-md col-xs-5">
                     <q-card-section class="column justify-end">
                         <div class="row items-baseline">
                             <span class="text-weight-bolder text-body1" :style="{color: getUsageColor('api')}">
@@ -95,7 +95,7 @@
                         <div class="text-caption q-mt-xs text-grey-6">Api usage</div>
                     </q-card-section>
                 </q-card>
-                <q-card class="text-white col-md col-xs-5">
+                <q-card v-if="config.repositories.sharedPref" class="text-white col-md col-xs-5">
                     <q-card-section class="column justify-end">
                         <div class="row items-baseline">
                             <span class="text-weight-bolder text-body1" :style="{color: getUsageColor('sharedPref')}">
@@ -107,19 +107,16 @@
                     </q-card-section>
                 </q-card>
             </div>
-        
             <div v-if="Object.keys(config.models).length > 0" class="q-pa-md">
                 <q-table
                     class="my-sticky-header-table"
-                    title="Collection Stats"
+                    title="Objects Stats"
                     :data="Object.values(config.models)"
                     :columns="columns"
                     row-key="name"
                     primary
                     table-header-class="bg-blue-1"
-                    color="white"
-                    flat
-                    bordered
+                    color="white"   
                 >
                     <template v-slot:body="props">
                         <q-tr :props="props">
@@ -161,15 +158,15 @@ module.exports = {
         {
           name: 'name',
           required: true,
-          label: 'Collection',
-          align: 'center',
+          label: 'Object',
+          align: 'left',
           field: 'modelName',
           format: val => `${val}`,
           sortable: true
         },
         {
           name: 'fieldsCount',
-          align: 'center',
+          align: 'left',
           label: 'No. of Fields',
           field: row => row.modelFields.length,
           sortable: true
@@ -177,21 +174,21 @@ module.exports = {
         { 
             name: 'database', 
             label: 'Database', 
-            align: 'center',
+            align: 'left',
             field: 'repository', 
             sortable: true 
         },
         { 
             name: 'repoName', 
             label: 'Repo/Table', 
-            align: 'center',
+            align: 'left',
             field: 'repoName', 
             sortable: true 
         },
         {
           name: 'relationshipsCount',
           label: 'No. of Relations',
-          align: 'center',
+          align: 'left',
           field: row => Object.keys(row.relationships).length,
           sortable: true
         }
@@ -229,7 +226,7 @@ module.exports = {
         count = modelsArr.length
         noOfModels = modelsArr.filter((model) => model['repository'] == dbName)
         if (noOfModels == 0) return 0
-        return (noOfModels.length/count).toFixed() || 0
+        return (noOfModels.length/count).toFixed(2) || 0
     },
     getDbPercent(dbName) {
         return (this.getDbUsage(dbName) * 100) + '%'
